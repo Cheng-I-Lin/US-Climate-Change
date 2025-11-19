@@ -132,8 +132,8 @@ Promise.all([d3.json(geoURL), d3.csv(dataURL)]).then(([geo, data]) => {
         const val = lookup[name];
         tooltip
           .style("display", "block")
-          .style("left", event.clientX + 5 + "px")
-          .style("top", event.clientY + 5 + "px")
+          .style("left", event.offsetX + 5 + "px")
+          .style("top", event.offsetY + 5 + "px")
           .html(
             `<b>${name}</b><br>${val ? val.toFixed(2) + " °C" : "No Data"}`
           );
@@ -235,23 +235,27 @@ function makeLegend(colorScale) {
   const range = colorScale.range();
 
   const boxH = 22;
-  const boxW = 25;
+  const boxW = 50;
   const labelOffset = 35;
+  const horizontalSpacing = 0; // Space between legend items
 
-  const svgLengend = d3
+  // Calculate total width needed for horizontal legend
+  const totalWidth = range.length * (boxW + horizontalSpacing) + 100;
+
+  const svgLegend = d3
     .select("#legend")
-    .attr("width", 100 + labelOffset)
-    .attr("height", range.length * boxH)
+    .attr("width", totalWidth)
+    .attr("height", 50) // Fixed height for horizontal legend
     .style("transition", "200ms")
     .style("overflow", "visible");
 
-  const g = svgLengend.append("g").attr("transform", "translate(30,20)");
+  const g = svgLegend.append("g").attr("transform", "translate(30,20)");
   let legendHover = [];
 
   range.forEach((color, i) => {
     g.append("rect")
-      .attr("x", 0)
-      .attr("y", (range.length - i - 1) * boxH)
+      .attr("x", i * (boxW + horizontalSpacing)) // Position horizontally
+      .attr("y", 0)
       .attr("width", boxW)
       .attr("height", boxH)
       .attr("fill", color)
@@ -283,18 +287,20 @@ function makeLegend(colorScale) {
     else label = domain[i - 1] + " to " + domain[i];
 
     g.append("text")
-      .attr("x", boxW + 5)
-      .attr("y", (range.length - i - 1) * boxH + boxH / 1.5)
-      .style("font-size", "11px")
+      .attr("x", i * (boxW + horizontalSpacing) + boxW / 2) // Center text below box
+      .attr("y", boxH + 15) // Position text below the box
+      .style("font-size", "10px") // Slightly smaller for horizontal layout
+      .style("text-anchor", "middle") // Center the text
       .text(label);
   });
 
-  svgLengend
+  svgLegend
     .append("text")
-    .attr("x", 0)
+    .attr("x", (totalWidth-50)/2)
     .attr("y", 12)
     .style("font-weight", "bold")
     .style("font-size", "11px")
+    .style("text-anchor", "middle")
     .text("Temperature (°C)");
 }
 
@@ -622,3 +628,10 @@ function moveStateToLeft(selection) {
     selectClass.style.setProperty("--y", translateYvh + "vh");
   }
 }
+
+const showFilter = document.getElementById("showFilter");
+const filterToggles = document.getElementById("filterToggles");
+showFilter.addEventListener("click", () => {
+  filterToggles.style.display =
+    filterToggles.style.display === "none" ? "block" : "none";
+});

@@ -17,12 +17,25 @@
             See how emission levels could lead to detrimental environmental
             impacts in the United States under different model forecasts.
           </p>
+          <small>CMIP6 Dataset</small>
         </div>
         <div class="textContainer">
-          hello
+          hell<br />hell<br />hell<br />hell<br />hell<br />hell<br />hell<br />hell<br />hell<br />hell<br />hell<br />hell<br />
         </div>
         <div class="textContainer">
-          hello
+          hellohell<br />hell<br />hell<br />hell<br />hell<br />hell<br />hell<br />hell<br />hell<br />hell<br />hell<br />
+        </div>
+        <div class="textContainer">
+          hellohell<br />hell<br />hell<br />hell<br />hell<br />hell<br />hell<br />hell<br />hell<br />hell<br />hell<br />
+        </div>
+        <div class="textContainer">
+          hellohell<br />hell<br />hell<br />hell<br />hell<br />hell<br />hell<br />hell<br />hell<br />hell<br />hell<br />
+        </div>
+        <div class="textContainer">
+          hellohell<br />hell<br />hell<br />hell<br />hell<br />hell<br />hell<br />hell<br />hell<br />hell<br />hell<br />
+        </div>
+        <div class="textContainer">
+          hellohell<br />hell<br />hell<br />hell<br />hell<br />hell<br />hell<br />hell<br />hell<br />hell<br />hell<br />
         </div>
       </div>
 
@@ -40,20 +53,30 @@
     </div>
 
     <div class="textContainer" id="filterSection">
-      <dl id="filterToggles">
-        <dt><strong>Prediction Model:</strong></dt>
-        <dd>
-          <select id="modelSelect"></select>
-        </dd>
-        <dt>
-          <strong>Year: <span id="yearLabel"></span></strong>
-        </dt>
-        <dd>
-          <input type="range" id="yearSlider" min="2015" max="2100" step="1" />
-        </dd>
-      </dl>
+      <div class="textContainer" id="showFilter">
+        <strong>Show Filters</strong>
+      </div>
+      <div id="filterToggles">
+        <dl>
+          <dt><strong>Prediction Model:</strong></dt>
+          <dd>
+            <select id="modelSelect"></select>
+          </dd>
+          <dt>
+            <strong>Year: <span id="yearLabel"></span></strong>
+          </dt>
+          <dd>
+            <input
+              type="range"
+              id="yearSlider"
+              min="2015"
+              max="2100"
+              step="1"
+            />
+          </dd>
+        </dl>
+      </div>
     </div>
-    <div class="textContainer" id="showFilter">Show Filters</div>
 
     <script src="plot.js" type="module"></script>
   </body>

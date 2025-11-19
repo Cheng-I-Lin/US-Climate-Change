@@ -99,8 +99,8 @@ input[type="range"]:hover {
 
 .container {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 1.5em;
 }
 
 .selected {
@@ -162,14 +162,14 @@ input[type="range"]:hover {
   position: relative;
   display: flex;
   gap: 2rem;
-  height: 100vh;
+  /* height: 100vh; */
 }
 
 #mainText {
   flex: 1;
   display: flex;           
   flex-direction: column;    
-  gap: 2rem;  
+  gap: 2em;  
 }
 
 #plot-container {
@@ -191,19 +191,20 @@ input[type="range"]:hover {
 }
 
 #filterSection {
-  position: fixed;
-  bottom: 1%;
-  box-sizing: border-box;
-  width: calc(100% - var(--body-margin) * 2);
+  margin-top: 2rem;
+  position: relative;
 }
 
 #showFilter {
-  position: fixed;
-  bottom: 1%;
-  left: 50%;
-  transform: translateX(-50%);
+  text-align: center;
+  background-color: #f0f0f0;
 }
 
 #showFilter:hover{
-  background-color: #007bff;
+  background-color: #bfddfd;
+}
+
+small{
+  font-size: 0.5em;
+  opacity: 0.5;
 }
