@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>US CMIP6 Temperature Map</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <link rel="stylesheet" href="plot.css" />
+  </head>
+  <body>
+    <div id="main-container">
+      <div id="mainText">
+        <div class="textContainer" id="title">
+          <!-- U.S. Average Annual Near Surface Temperature (TAS) by State -->
+          <h2>Climate Change & Environmental Consequences</h2>
+          <p>
+            <strong>Keep scrolling.</strong>
+            See how emission levels could lead to detrimental environmental
+            impacts in the United States under different model forecasts.
+          </p>
+        </div>
+        <div class="textContainer">
+          hello
+        </div>
+        <div class="textContainer">
+          hello
+        </div>
+      </div>
+
+      <div id="plot-container">
+        <div class="container">
+          <svg id="chart"></svg>
+          <svg id="state-chart"></svg>
+          <svg id="legend"></svg>
+        </div>
+        <h2 id="state-name">
+          Click a state to see temperature data aggregated by the chosen state
+        </h2>
+        <div id="tooltip"></div>
+      </div>
+    </div>
+
+    <div class="textContainer" id="filterSection">
+      <dl id="filterToggles">
+        <dt><strong>Prediction Model:</strong></dt>
+        <dd>
+          <select id="modelSelect"></select>
+        </dd>
+        <dt>
+          <strong>Year: <span id="yearLabel"></span></strong>
+        </dt>
+        <dd>
+          <input type="range" id="yearSlider" min="2015" max="2100" step="1" />
+        </dd>
+      </dl>
+    </div>
+    <div class="textContainer" id="showFilter">Show Filters</div>
+
+    <script src="plot.js" type="module"></script>
+  </body>
+</html>
