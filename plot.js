@@ -32,12 +32,28 @@ var enableUser = false;
 //const slides = Array.from({ length: slideNum }, (_, i) => i + 1);
 var currentSlide = 0;
 var storyScenario = "SSP245";
+var diffLegend = false;
 //console.log(currentSlide);
+
+const root = document.documentElement;
 
 const color = d3
   .scaleThreshold()
   .domain([3, 6, 9, 12, 15, 18, 21, 24])
   .range(d3.schemeRdYlBu[9].reverse());
+
+const customColors = [
+  "white",
+  "#fee0d2",
+  "#fcbba1",
+  "#fc9272",
+  "#fb6a4a",
+  "#ef3b2c",
+];
+const diffColor = d3
+  .scaleThreshold()
+  .domain([0, 0.5, 1, 1.5, 2])
+  .range(customColors);
 
 Promise.all([d3.json(geoURL), d3.csv(dataURL)]).then(([geo, data]) => {
   data.forEach((d) => {
@@ -97,7 +113,7 @@ Promise.all([d3.json(geoURL), d3.csv(dataURL)]).then(([geo, data]) => {
   const projection = d3.geoIdentity().fitSize([width, height], mainlandGeo);
   const path = d3.geoPath().projection(projection);
 
-  makeLegend(color);
+  //makeLegend(color);
 
   const g = svg
     .append("g")
@@ -136,6 +152,12 @@ Promise.all([d3.json(geoURL), d3.csv(dataURL)]).then(([geo, data]) => {
     const year = +d3.select("#yearSlider").node().value;
     let yearValue = year;
 
+    if (!diffLegend) {
+      makeLegend(color);
+    } else {
+      makeLegend(diffColor);
+    }
+
     if (year === years[1] - 1) {
       d3.select("#yearLabel").text("All Years");
       yearValue = -1;
@@ -145,7 +167,9 @@ Promise.all([d3.json(geoURL), d3.csv(dataURL)]).then(([geo, data]) => {
 
     let filtered = data.filter(
       (d) =>
-        d.scenario === storyScenario && d.model === "All Models" && d.year === -1
+        d.scenario === storyScenario &&
+        d.model === "All Models" &&
+        d.year === -1
     );
 
     if (enableUser) {
@@ -164,7 +188,11 @@ Promise.all([d3.json(geoURL), d3.csv(dataURL)]).then(([geo, data]) => {
           return "#ccc";
         }
         const name = d.properties.name;
-        return lookup[name] ? color(lookup[name]) : "#ccc";
+        if (currentSlide === 3 || scenario === "Overall Difference") {
+          return lookup[name] ? diffColor(lookup[name]) : "#ccc";
+        } else {
+          return lookup[name] ? color(lookup[name]) : "#ccc";
+        }
       })
       .on("mouseover", (event, d) => {
         const name = d.properties.name;
@@ -220,6 +248,11 @@ Promise.all([d3.json(geoURL), d3.csv(dataURL)]).then(([geo, data]) => {
   }
 
   scenarioSelect.on("change", (event) => {
+    if (event.target.value === "Overall Difference") {
+      diffLegend = true;
+    } else {
+      diffLegend = false;
+    }
     update();
     if (plotName) {
       const model = modelSelect.node().value;
@@ -268,16 +301,25 @@ Promise.all([d3.json(geoURL), d3.csv(dataURL)]).then(([geo, data]) => {
 
   function onSlideChange(slide) {
     if (slide === 0) {
+      //root.style.setProperty("--bg-color", "rgb(238, 238, 238)");
       d3.select("#legend").style("opacity", 0).style("visibility", "hidden");
     } else {
       switch (slide) {
         case 1:
           storyScenario = "SSP245";
+          diffLegend = false;
+          //root.style.setProperty("--bg-color", "#a3cefc");
           break;
         case 2:
           storyScenario = "SSP585";
+          diffLegend = false;
+          break;
+        case 3:
+          storyScenario = "Overall Difference";
+          diffLegend = true;
           break;
         default:
+          diffLegend = false;
           break;
       }
       d3.select("#legend").style("opacity", 1).style("visibility", "visible");
@@ -335,6 +377,7 @@ function hoverOut(target) {
 }
 
 function makeLegend(colorScale) {
+  d3.select("#legend").selectAll("*").remove();
   const domain = colorScale.domain();
   const range = colorScale.range();
 

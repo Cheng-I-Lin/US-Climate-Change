@@ -10,6 +10,7 @@ body {
   margin-inline: var(--body-margin);
   overflow-x: hidden;
   background-color: var(--bg-color);
+  transition: background-color 200ms linear;
 }
 #tooltip {
   position: fixed;
