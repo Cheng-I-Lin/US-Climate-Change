@@ -2,13 +2,14 @@
   --slider-color: #a3cefc;
   --thumb-size: 20px;
   --thumb-offset: -7px;
-  background-color: rgb(238, 238, 238);
+  --bg-color: rgb(238, 238, 238);
 }
 body {
   font-family: sans-serif;
   --body-margin: max(1em, (100% - 140ch) / 2);
   margin-inline: var(--body-margin);
   overflow-x: hidden;
+  background-color: var(--bg-color);
 }
 #tooltip {
   position: fixed;
@@ -43,7 +44,7 @@ select {
   font-size: 16px;
   color: #333;
   width: 100%;
-  transition: 100ms;
+  transition: 200ms;
 
   /* Hiding the default arrow (browser-specific) */
   -webkit-appearance: none; /* For Chrome, Safari */
@@ -143,6 +144,10 @@ input[type="range"]:hover {
 }
 
 /* === Legend === */
+#legend {
+  visibility: hidden;
+}
+
 #legend text {
   font-family: sans-serif;
   user-select: none;
@@ -167,9 +172,13 @@ input[type="range"]:hover {
 
 #mainText {
   flex: 1;
-  display: flex;           
-  flex-direction: column;    
-  gap: 2em;  
+  display: flex;
+  flex-direction: column;
+  gap: 50vh;
+}
+
+#last-text {
+  margin-bottom: 30vh;
 }
 
 #plot-container {
@@ -191,7 +200,6 @@ input[type="range"]:hover {
 }
 
 #filterSection {
-  margin-top: 2rem;
   position: relative;
 }
 
@@ -200,11 +208,30 @@ input[type="range"]:hover {
   background-color: #f0f0f0;
 }
 
-#showFilter:hover{
+#showFilter:hover {
   background-color: #bfddfd;
 }
 
-small{
+small {
   font-size: 0.5em;
   opacity: 0.5;
+}
+
+a:link,
+a:visited {
+  text-decoration: none;
+  color: #007bff;
+}
+
+a:hover {
+  color: blue;
+}
+
+.instructions {
+  display: block;
+  font-size: 0.85em;
+}
+
+.instructionStar {
+  font-size: 1.25em;
 }

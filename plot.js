@@ -1,4 +1,5 @@
 import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7.9.0/+esm";
+import scrollama from "https://cdn.jsdelivr.net/npm/scrollama@3.2.0/+esm";
 
 // config
 const width = 1000,
@@ -19,13 +20,24 @@ const stateName = document.querySelector("#state-name");
 
 const geoURL =
   "https://raw.githubusercontent.com/PublicaMundi/MappingAPI/master/data/geojson/us-states.json";
-const dataURL = "new_avg_states_model.csv";
+const dataURL = "new_tas_data.csv";
 
 var plotName;
 var selectedState = [];
 var isSelected = false;
 var legendVisible = true;
 let updateYearLineGlobal = null;
+var enableUser = false;
+//const slideNum = d3.select('#mainText').selectAll('div').nodes().length;
+//const slides = Array.from({ length: slideNum }, (_, i) => i + 1);
+var currentSlide = 0;
+var storyScenario = "SSP245";
+//console.log(currentSlide);
+
+const color = d3
+  .scaleThreshold()
+  .domain([3, 6, 9, 12, 15, 18, 21, 24])
+  .range(d3.schemeRdYlBu[9].reverse());
 
 Promise.all([d3.json(geoURL), d3.csv(dataURL)]).then(([geo, data]) => {
   data.forEach((d) => {
@@ -41,24 +53,35 @@ Promise.all([d3.json(geoURL), d3.csv(dataURL)]).then(([geo, data]) => {
     .join("option")
     .text((d) => d);
 
+  const scenarios = Array.from(new Set(data.map((d) => d.scenario)));
+  const scenarioSelect = d3.select("#scenarioSelect");
+  scenarioSelect
+    .selectAll("option")
+    .data(scenarios)
+    .join("option")
+    .text((d) => d);
+
   const usSeriesByModel = {};
-  for (const m of models) {
-    const arr = data.filter((d) => d.model === m);
-    const rolled = d3.rollups(
-      arr,
-      (v) => d3.mean(v, (d) => d.tas_degree),
-      (d) => d.year
-    );
-    usSeriesByModel[m] = rolled
-      .map(([year, mean]) => ({ year: +year, mean: +mean }))
-      .sort((a, b) => a.year - b.year);
+  for (const s of scenarios) {
+    for (const m of models) {
+      const arr = data.filter((d) => d.scenario === s && d.model === m);
+      const rolled = d3.rollups(
+        arr,
+        //(v) => v.tas_degree,
+        (v) => d3.mean(v, (d) => d.tas_degree),
+        (d) => d.year
+      );
+      usSeriesByModel[s + m] = rolled
+        .map(([year, mean]) => ({ year: +year, mean: +mean }))
+        .sort((a, b) => a.year - b.year);
+    }
   }
 
   const years = Array.from(new Set(data.map((d) => d.year))).sort(
     (a, b) => a - b
   );
   d3.select("#yearSlider")
-    .attr("min", years[0])
+    .attr("min", years[1] - 1) //Makes -1 all year
     .attr("max", years[years.length - 1])
     .attr("value", years[0]);
   d3.select("#yearLabel").text(years[0]);
@@ -74,10 +97,6 @@ Promise.all([d3.json(geoURL), d3.csv(dataURL)]).then(([geo, data]) => {
   const projection = d3.geoIdentity().fitSize([width, height], mainlandGeo);
   const path = d3.geoPath().projection(projection);
 
-  const color = d3
-    .scaleThreshold()
-    .domain([3, 6, 9, 12, 15, 18, 21, 24])
-    .range(d3.schemeRdYlBu[9].reverse());
   makeLegend(color);
 
   const g = svg
@@ -113,80 +132,126 @@ Promise.all([d3.json(geoURL), d3.csv(dataURL)]).then(([geo, data]) => {
 
   function update() {
     const model = modelSelect.node().value;
+    const scenario = scenarioSelect.node().value;
     const year = +d3.select("#yearSlider").node().value;
-    d3.select("#yearLabel").text(year);
+    let yearValue = year;
 
-    const filtered = data.filter((d) => d.model === model && d.year === year);
+    if (year === years[1] - 1) {
+      d3.select("#yearLabel").text("All Years");
+      yearValue = -1;
+    } else {
+      d3.select("#yearLabel").text(year);
+    }
+
+    let filtered = data.filter(
+      (d) =>
+        d.scenario === storyScenario && d.model === "All Models" && d.year === -1
+    );
+
+    if (enableUser) {
+      filtered = data.filter(
+        (d) =>
+          d.scenario === scenario && d.model === model && d.year === yearValue
+      );
+    }
 
     const lookup = {};
     filtered.forEach((d) => (lookup[d.state] = d.tas_degree));
-
     states
       .style("fill-opacity", 0.7)
       .attr("fill", (d) => {
+        if (currentSlide === 0) {
+          return "#ccc";
+        }
         const name = d.properties.name;
         return lookup[name] ? color(lookup[name]) : "#ccc";
       })
       .on("mouseover", (event, d) => {
         const name = d.properties.name;
         const val = lookup[name];
-        tooltip
-          .style("display", "block")
-          .style("left", event.offsetX + 5 + "px")
-          .style("top", event.offsetY + 5 + "px")
-          .html(
-            `<b>${name}</b><br>${val ? val.toFixed(2) + " °C" : "No Data"}`
-          );
+        if (currentSlide != 0) {
+          tooltip
+            .style("display", "block")
+            .style("left", event.offsetX + 5 + "px")
+            .style("top", event.offsetY + 5 + "px")
+            .html(
+              `<b>${name}</b><br>${val ? val.toFixed(2) + " °C" : "No Data"}`
+            );
+        }
       })
       .on("mouseout", () => tooltip.style("display", "none"))
       .on("click", (event, d) => {
-        const usSeries = usSeriesByModel[model];
-        if (event.currentTarget.getAttribute("fill") != "#ccc") {
-          if (selectedState.length == 0)
-            selectedState.push(event.currentTarget);
+        const usSeries = usSeriesByModel[scenario + model];
+        if (enableUser) {
+          if (event.currentTarget.getAttribute("fill") != "#ccc") {
+            if (selectedState.length == 0)
+              selectedState.push(event.currentTarget);
 
-          if (isSelected) {
-            if (event.currentTarget.classList.contains("selected")) {
-              event.currentTarget.classList.remove("selected");
-              isSelected = false;
-              selectState();
-              selectedState.pop();
-              stateName.innerHTML =
-                "Click a state to see temperature data aggregated by the chosen state";
-            }
-          } else {
-            if (!event.currentTarget.classList.contains("selected")) {
-              const name = d.properties.name;
-              plotName = name;
-              const filtered = data.filter(
-                (d) => d.model === model && d.state === name
-              );
-              event.currentTarget.classList.add("selected");
-              isSelected = true;
-              selectState();
-              moveStateToLeft(selectedState[0]);
-              subplot(filtered, usSeries);
-              stateName.innerHTML = "Click " + plotName + " to deselect";
+            if (isSelected) {
+              if (event.currentTarget.classList.contains("selected")) {
+                event.currentTarget.classList.remove("selected");
+                isSelected = false;
+                selectState();
+                selectedState.pop();
+                stateName.innerHTML =
+                  "Click a state to see temperature data aggregated by the chosen state";
+              }
+            } else {
+              if (!event.currentTarget.classList.contains("selected")) {
+                const name = d.properties.name;
+                plotName = name;
+                const filtered = data.filter(
+                  (d) =>
+                    d.scenario === scenario &&
+                    d.model === model &&
+                    d.state === name
+                );
+                event.currentTarget.classList.add("selected");
+                isSelected = true;
+                selectState();
+                moveStateToLeft(selectedState[0]);
+                subplot(filtered, usSeries);
+                stateName.innerHTML = "Click " + plotName + " to deselect";
+              }
             }
           }
         }
       });
   }
 
+  scenarioSelect.on("change", (event) => {
+    update();
+    if (plotName) {
+      const model = modelSelect.node().value;
+      const filtered = data.filter(
+        (d) =>
+          d.scenario === event.target.value &&
+          d.model === model &&
+          d.state === plotName
+      );
+      const usSeries = usSeriesByModel[event.target.value + model];
+      subplot(filtered, usSeries);
+    }
+  });
+
   modelSelect.on("change", (event) => {
     update();
     if (plotName) {
+      const scenario = scenarioSelect.node().value;
       const filtered = data.filter(
-        (d) => d.model === event.target.value && d.state === plotName
+        (d) =>
+          d.scenario === scenario &&
+          d.model === event.target.value &&
+          d.state === plotName
       );
-      const usSeries = usSeriesByModel[event.target.value];
+      const usSeries = usSeriesByModel[scenario + event.target.value];
       subplot(filtered, usSeries);
     }
   });
 
   d3.select("#yearSlider").on("input", function () {
     const year = +this.value;
-    d3.select("#yearLabel").text(year);
+    //d3.select("#yearLabel").text(year);
     update();
 
     // Call global updater if subplot exists
@@ -200,6 +265,45 @@ Promise.all([d3.json(geoURL), d3.csv(dataURL)]).then(([geo, data]) => {
   });
 
   update();
+
+  function onSlideChange(slide) {
+    if (slide === 0) {
+      d3.select("#legend").style("opacity", 0).style("visibility", "hidden");
+    } else {
+      switch (slide) {
+        case 1:
+          storyScenario = "SSP245";
+          break;
+        case 2:
+          storyScenario = "SSP585";
+          break;
+        default:
+          break;
+      }
+      d3.select("#legend").style("opacity", 1).style("visibility", "visible");
+    }
+  }
+
+  function onStepEnter(response) {
+    const id = response.element.id;
+    if (id === "last-text") {
+      enableUser = true;
+    } else {
+      enableUser = false;
+    }
+    currentSlide = response.index;
+    onSlideChange(currentSlide);
+    update();
+    //console.log(currentSlide);
+  }
+
+  const scroller = scrollama();
+  scroller
+    .setup({
+      container: "#main-container",
+      step: "#main-container .textContainer",
+    })
+    .onStepEnter(onStepEnter);
 });
 
 function selectState() {
@@ -296,7 +400,7 @@ function makeLegend(colorScale) {
 
   svgLegend
     .append("text")
-    .attr("x", (totalWidth-50)/2)
+    .attr("x", (totalWidth - 50) / 2)
     .attr("y", 12)
     .style("font-weight", "bold")
     .style("font-size", "11px")
