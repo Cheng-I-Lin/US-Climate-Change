@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      .state {
+        fill: #ccc;
+        stroke: #fff;
+        stroke-width: 1px;
+        transition: fill-opacity 0.3s;
+      }
+
+      .state:hover {
+        fill-opacity: 0.7;
+      }
+
+      .faded {
+        fill-opacity: 0.3;
+      }
+
+      .zoomed {
+        fill-opacity: 1;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="map-container"></div>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://unpkg.com/topojson@3"></script>
+    <script>
+      // script.js
+      const width = 800;
+      const height = 600;
+
+      // Create SVG
+      const svg = d3
+        .select("#map-container")
+        .append("svg")
+        .attr("width", width)
+        .attr("height", height);
+
+      // Create a group for all map elements
+      const mapGroup = svg.append("g");
+
+      // Projection and path generator
+      const projection = d3
+        .geoAlbersUsa()
+        .translate([width / 2, height / 2])
+        .scale(1000);
+
+      const path = d3.geoPath().projection(projection);
+
+      // Store original transform state
+      let isZoomed = false;
+      let currentZoomState = null;
+
+      // Load and draw the map
+      d3.json("https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json").then(
+        function (us) {
+          const states = topojson.feature(us, us.objects.states);
+
+          // Draw states
+          const statePaths = mapGroup
+            .selectAll(".state")
+            .data(states.features)
+            .enter()
+            .append("path")
+            .attr("class", "state")
+            .attr("d", path)
+            .attr("data-name", (d) => d.properties.name)
+            .on("click", function (event, d) {
+              zoomToState(d, this);
+            });
+
+          // Zoom to state function
+          function zoomToState(selectedState, clickedElement) {
+            const stateName = selectedState.properties.name;
+
+            // If clicking the same state, reset zoom
+            if (currentZoomState === stateName) {
+              resetZoom();
+              return;
+            }
+
+            currentZoomState = stateName;
+            isZoomed = true;
+
+            // Get the bounds of the selected state
+            const bounds = path.bounds(selectedState);
+            const dx = bounds[1][0] - bounds[0][0];
+            const dy = bounds[1][1] - bounds[0][1];
+            const x = (bounds[0][0] + bounds[1][0]) / 2;
+            const y = (bounds[0][1] + bounds[1][1]) / 2;
+            const scale = Math.max(
+              1,
+              Math.min(8, 0.9 / Math.max(dx / width, dy / height))
+            );
+
+            // Calculate the translate to center the selected state
+            const translate = [width / 2 - scale * x, height / 2 - scale * y];
+
+            // Apply fade to all states
+            mapGroup
+              .selectAll(".state")
+              .classed("faded", true)
+              .classed("zoomed", false);
+
+            // Highlight selected state
+            d3.select(clickedElement)
+              .classed("faded", false)
+              .classed("zoomed", true);
+
+            // Create zoom transition
+            mapGroup
+              .transition()
+              .duration(1000)
+              .attr(
+                "transform",
+                `translate(${translate[0]},${translate[1]}) scale(${scale})`
+              );
+          }
+
+          // Reset zoom function
+          function resetZoom() {
+            currentZoomState = null;
+            isZoomed = false;
+
+            mapGroup
+              .selectAll(".state")
+              .classed("faded", false)
+              .classed("zoomed", false);
+
+            mapGroup
+              .transition()
+              .duration(1000)
+              .attr("transform", "translate(0,0) scale(1)");
+          }
+
+          // Add reset on double click
+          svg.on("dblclick", resetZoom);
+        }
+      );
+    </script>
+  </body>
+</html>

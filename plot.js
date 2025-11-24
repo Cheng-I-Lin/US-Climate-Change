@@ -8,7 +8,7 @@ const width = 1000,
 const svg = d3
   .select("#chart")
   .attr("viewBox", `0 0 ${width} ${height}`)
-  .style("overflow", "visible");
+  .style("overflow", "hidden");
 
 const svg_state = d3
   .select("#state-chart")
@@ -16,16 +16,15 @@ const svg_state = d3
   .style("display", "none");
 
 const tooltip = d3.select("#tooltip");
-const stateName = document.querySelector("#state-name");
+//const stateName = document.querySelector("#state-name");
 
 const geoURL =
   "https://raw.githubusercontent.com/PublicaMundi/MappingAPI/master/data/geojson/us-states.json";
-const dataURL = "new_tas_data.csv";
+const dataURL = "combined_data.csv";
 
 var plotName;
-var selectedState = [];
 var isSelected = false;
-var legendVisible = true;
+//var legendVisible = true;
 let updateYearLineGlobal = null;
 var enableUser = false;
 //const slideNum = d3.select('#mainText').selectAll('div').nodes().length;
@@ -33,6 +32,11 @@ var enableUser = false;
 var currentSlide = 0;
 var storyScenario = "SSP245";
 var diffLegend = false;
+var storyState = [];
+
+// Store original transform state
+let currentZoomState = null;
+
 //console.log(currentSlide);
 
 const root = document.documentElement;
@@ -58,6 +62,9 @@ const diffColor = d3
 Promise.all([d3.json(geoURL), d3.csv(dataURL)]).then(([geo, data]) => {
   data.forEach((d) => {
     d.tas_degree = +d.tas_degree;
+    d.pr = +d.pr;
+    d.prsn = +d.prsn;
+    d.mrsos = +d.mrsos;
     d.year = +d.year;
   });
 
@@ -181,6 +188,9 @@ Promise.all([d3.json(geoURL), d3.csv(dataURL)]).then(([geo, data]) => {
 
     const lookup = {};
     filtered.forEach((d) => (lookup[d.state] = d.tas_degree));
+    const filteredLookup = Object.fromEntries(
+      Object.entries(lookup).filter(([key]) => storyState.includes(key))
+    );
     states
       .style("fill-opacity", 0.7)
       .attr("fill", (d) => {
@@ -191,13 +201,20 @@ Promise.all([d3.json(geoURL), d3.csv(dataURL)]).then(([geo, data]) => {
         if (currentSlide === 3 || scenario === "Overall Difference") {
           return lookup[name] ? diffColor(lookup[name]) : "#ccc";
         } else {
-          return lookup[name] ? color(lookup[name]) : "#ccc";
+          if (currentSlide === 4) {
+            //Colors only the selected states
+            return Object.keys(filteredLookup).includes(name)
+              ? diffColor(lookup[name])
+              : "#ccc";
+          } else {
+            return lookup[name] ? color(lookup[name]) : "#ccc";
+          }
         }
       })
       .on("mouseover", (event, d) => {
         const name = d.properties.name;
         const val = lookup[name];
-        if (currentSlide != 0) {
+        if (currentSlide != 0 && !isSelected) {
           tooltip
             .style("display", "block")
             .style("left", event.offsetX + 5 + "px")
@@ -212,16 +229,19 @@ Promise.all([d3.json(geoURL), d3.csv(dataURL)]).then(([geo, data]) => {
         const usSeries = usSeriesByModel[scenario + model];
         if (enableUser) {
           if (event.currentTarget.getAttribute("fill") != "#ccc") {
+            zoomInState(d, event.currentTarget);
+            selectState();
+            /*
             if (selectedState.length == 0)
               selectedState.push(event.currentTarget);
-
-            if (isSelected) {
+            
+            if (isZoomed) {
               if (event.currentTarget.classList.contains("selected")) {
                 event.currentTarget.classList.remove("selected");
                 isSelected = false;
                 selectState();
                 selectedState.pop();
-                stateName.innerHTML =
+                .innerHTML =
                   "Click a state to see temperature data aggregated by the chosen state";
               }
             } else {
@@ -237,15 +257,77 @@ Promise.all([d3.json(geoURL), d3.csv(dataURL)]).then(([geo, data]) => {
                 event.currentTarget.classList.add("selected");
                 isSelected = true;
                 selectState();
-                moveStateToLeft(selectedState[0]);
+                //moveStateToLeft(selectedState[0]);
+                zoomInState(d, event.currentTarget);
                 subplot(filtered, usSeries);
-                stateName.innerHTML = "Click " + plotName + " to deselect";
+                //stateName.innerHTML = "Click " + plotName + " to deselect";
               }
-            }
+            }*/
           }
         }
       });
   }
+
+  const flipTransform = `scale(1, -1) translate(0, -${height})`;
+
+  // Zoom to state function
+  function zoomInState(selectedState, clickedElement) {
+    const stateName = selectedState.properties.name;
+
+    // If clicking the same state, reset zoom
+    if (currentZoomState === stateName) {
+      resetZoom();
+      return;
+    }
+
+    // Get the bounds of the selected state
+    const bounds = path.bounds(selectedState);
+    const dx = bounds[1][0] - bounds[0][0];
+    const dy = bounds[1][1] - bounds[0][1];
+    const x = (bounds[0][0] + bounds[1][0]) / 2;
+    const y = (bounds[0][1] + bounds[1][1]) / 2;
+    const scale = Math.max(
+      1,
+      Math.min(8, 0.9 / Math.max(dx / width, dy / height))
+    );
+
+    // Calculate the translate to center the selected state
+    const translate = [width / 2 - scale * x, height / 2 - scale * y];
+
+    if (!isSelected) {
+      // Apply fade to all states
+      g.selectAll(".states").classed("faded", true).classed("zoomed", false);
+
+      // Highlight selected state
+      d3.select(clickedElement).classed("faded", false).classed("zoomed", true);
+
+      // Create zoom transition
+      g.transition()
+        .duration(1000)
+        .attr(
+          "transform",
+          `${flipTransform} translate(${translate[0]},${translate[1]}) scale(${scale})`
+        );
+      currentZoomState = stateName;
+      isSelected = true;
+    }
+  }
+
+  // Reset zoom function
+  function resetZoom() {
+    if (isSelected) {
+      g.selectAll(".states").classed("faded", false).classed("zoomed", false);
+
+      g.transition()
+        .duration(1000)
+        .attr("transform", `${flipTransform} translate(0,0) scale(1)`);
+      currentZoomState = null;
+      isSelected = false;
+    }
+  }
+
+  // Add reset on double click
+  //svg.on("dblclick", resetZoom);
 
   scenarioSelect.on("change", (event) => {
     if (event.target.value === "Overall Difference") {
@@ -300,10 +382,12 @@ Promise.all([d3.json(geoURL), d3.csv(dataURL)]).then(([geo, data]) => {
   update();
 
   function onSlideChange(slide) {
+    const legend = d3.select("#legend");
     if (slide === 0) {
       //root.style.setProperty("--bg-color", "rgb(238, 238, 238)");
-      d3.select("#legend").style("opacity", 0).style("visibility", "hidden");
+      legend.style("opacity", 0).style("visibility", "hidden");
     } else {
+      legend.style("opacity", 1).style("visibility", "visible");
       switch (slide) {
         case 1:
           storyScenario = "SSP245";
@@ -318,11 +402,18 @@ Promise.all([d3.json(geoURL), d3.csv(dataURL)]).then(([geo, data]) => {
           storyScenario = "Overall Difference";
           diffLegend = true;
           break;
+        case 4:
+          legend.style("opacity", 0).style("visibility", "hidden");
+          storyState = ["Texas"];
+          break;
+        case 5:
+          resetZoom();
+          break;
         default:
           diffLegend = false;
+          storyState = [];
           break;
       }
-      d3.select("#legend").style("opacity", 1).style("visibility", "visible");
     }
   }
 
@@ -349,7 +440,7 @@ Promise.all([d3.json(geoURL), d3.csv(dataURL)]).then(([geo, data]) => {
 });
 
 function selectState() {
-  d3.select("#chart")
+  /*d3.select("#chart")
     .selectAll("path")
     .nodes()
     .forEach((s) => {
@@ -360,12 +451,11 @@ function selectState() {
           d3.select(s).style("opacity", "1").style("visibility", "visible");
         }
       }
-    });
-  legendVisible = !legendVisible;
+    });*/
   d3.select("#legend")
-    .style("opacity", legendVisible ? 1 : 0)
-    .style("visibility", legendVisible ? "visible" : "hidden");
-  svg_state.style("display", legendVisible ? "none" : "block");
+    .style("opacity", isSelected ? 0 : 1)
+    .style("visibility", isSelected ? "hidden" : "visible");
+  //svg_state.style("display", legendVisible ? "none" : "block");
 }
 
 function hoverOver(target) {
@@ -393,7 +483,7 @@ function makeLegend(colorScale) {
     .select("#legend")
     .attr("width", totalWidth)
     .attr("height", 50) // Fixed height for horizontal legend
-    .style("transition", "200ms")
+    //.style("transition", "200ms")
     .style("overflow", "visible");
 
   const g = svgLegend.append("g").attr("transform", "translate(30,20)");

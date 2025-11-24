@@ -147,6 +147,7 @@ input[type="range"]:hover {
 /* === Legend === */
 #legend {
   visibility: hidden;
+  transition: 400ms linear;
 }
 
 #legend text {
@@ -155,7 +156,7 @@ input[type="range"]:hover {
 }
 
 #legend rect {
-  transition: 150ms ease;
+  transition: 200ms ease;
 }
 
 /* Tooltip fade-in animation */
@@ -235,4 +236,12 @@ a:hover {
 
 .instructionStar {
   font-size: 1.25em;
+}
+
+.faded {
+  fill-opacity: 0.3 !important;
+}
+
+.zoomed {
+  fill-opacity: 1 !important;
 }
