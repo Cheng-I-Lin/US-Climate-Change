@@ -105,44 +105,33 @@ input[type="range"]:hover {
   align-items: center;
 }
 
-.selected {
+/*.selected {
   transform: translate(var(--x), var(--y)) scale(1.5);
-}
+}*/
 
 #chart {
   overflow: visible;
 }
 
-/* === Subplot layout (fixed positioning and balance) === */
-#state-chart {
-  position: absolute;
-  left: 30vw; /* stays neatly to the right of map */
-  top: 18vh; /* move it slightly down */
-  width: 45vw; /* subplot width */
-  height: 75vh; /* slightly shorter for balance */
-  display: block;
-  overflow: visible;
-}
-
 /* State name message under subplot */
-#state-name {
+/*#state-name {
   position: absolute;
-  left: 50vw; /* centered under chart */
-  top: 88vh; /* raise it slightly */
+  left: 50vw; 
+  top: 88vh; 
   width: 35vw;
   text-align: center;
   font-size: 14px;
   color: #333;
-}
+}*/
 
 /* === Year line and label === */
-.year-line {
+/*.year-line {
   stroke: #ff6666;
   stroke-dasharray: 5 5;
   stroke-width: 2px;
   opacity: 0.8;
   pointer-events: none;
-}
+}*/
 
 /* === Legend === */
 #legend {
@@ -163,6 +152,7 @@ input[type="range"]:hover {
 #tooltip {
   transition: opacity 0.15s ease-in-out;
 }
+
 
 #main-container {
   padding-top: 25vh;
@@ -239,9 +229,47 @@ a:hover {
 }
 
 .faded {
+  opacity: 0.3;
   fill-opacity: 0.3 !important;
 }
 
 .zoomed {
   fill-opacity: 1 !important;
+}
+
+.line-graph {
+  font-family: "Arial", sans-serif;
+}
+
+.line-graph rect {
+  transition: fill 0.3s;
+}
+
+.line-graph:hover rect {
+  fill: rgba(255, 255, 255, 0.95);
+}
+
+.dot {
+  transition: all 0.3s;
+  cursor: pointer;
+}
+
+.dot:hover {
+  r: 6;
+  fill: #ff6b6b;
+  stroke: #ff6b6b;
+}
+
+.x-axis,
+.y-axis {
+  font-size: 11px;
+  color: #666;
+}
+
+.x-axis path,
+.y-axis path,
+.x-axis line,
+.y-axis line {
+  stroke: #ccc;
+  shape-rendering: crispEdges;
 }

@@ -10,10 +10,10 @@ const svg = d3
   .attr("viewBox", `0 0 ${width} ${height}`)
   .style("overflow", "hidden");
 
-const svg_state = d3
+/*const svg_state = d3
   .select("#state-chart")
   .style("overflow", "visible")
-  .style("display", "none");
+  .style("display", "none");*/
 
 const tooltip = d3.select("#tooltip");
 //const stateName = document.querySelector("#state-name");
@@ -22,7 +22,7 @@ const geoURL =
   "https://raw.githubusercontent.com/PublicaMundi/MappingAPI/master/data/geojson/us-states.json";
 const dataURL = "combined_data.csv";
 
-var plotName;
+//var plotName;
 var isSelected = false;
 //var legendVisible = true;
 let updateYearLineGlobal = null;
@@ -201,7 +201,7 @@ Promise.all([d3.json(geoURL), d3.csv(dataURL)]).then(([geo, data]) => {
         if (currentSlide === 3 || scenario === "Overall Difference") {
           return lookup[name] ? diffColor(lookup[name]) : "#ccc";
         } else {
-          if (currentSlide === 4) {
+          if ([4, 5].includes(currentSlide)) {
             //Colors only the selected states
             return Object.keys(filteredLookup).includes(name)
               ? diffColor(lookup[name])
@@ -229,6 +229,17 @@ Promise.all([d3.json(geoURL), d3.csv(dataURL)]).then(([geo, data]) => {
         const usSeries = usSeriesByModel[scenario + model];
         if (enableUser) {
           if (event.currentTarget.getAttribute("fill") != "#ccc") {
+            const name = d.properties.name;
+            const stateData = data.filter(
+              (d) =>
+                d.state === name &&
+                d.year !== -1 &&
+                d.scenario === scenario &&
+                d.model === model
+            );
+            if (!isSelected) {
+              createStateVisualizations(stateData, name);
+            }
             zoomInState(d, event.currentTarget);
             selectState();
             /*
@@ -336,31 +347,33 @@ Promise.all([d3.json(geoURL), d3.csv(dataURL)]).then(([geo, data]) => {
       diffLegend = false;
     }
     update();
-    if (plotName) {
+    if (currentZoomState) {
       const model = modelSelect.node().value;
       const filtered = data.filter(
         (d) =>
           d.scenario === event.target.value &&
+          d.year !== -1 &&
           d.model === model &&
-          d.state === plotName
+          d.state === currentZoomState
       );
       const usSeries = usSeriesByModel[event.target.value + model];
-      subplot(filtered, usSeries);
+      createStateVisualizations(filtered, currentZoomState);
     }
   });
 
   modelSelect.on("change", (event) => {
     update();
-    if (plotName) {
+    if (currentZoomState) {
       const scenario = scenarioSelect.node().value;
       const filtered = data.filter(
         (d) =>
           d.scenario === scenario &&
+          d.year !== -1 &&
           d.model === event.target.value &&
-          d.state === plotName
+          d.state === currentZoomState
       );
       const usSeries = usSeriesByModel[scenario + event.target.value];
-      subplot(filtered, usSeries);
+      createStateVisualizations(filtered, currentZoomState);
     }
   });
 
@@ -369,6 +382,7 @@ Promise.all([d3.json(geoURL), d3.csv(dataURL)]).then(([geo, data]) => {
     //d3.select("#yearLabel").text(year);
     update();
 
+    /*
     // Call global updater if subplot exists
     if (typeof updateYearLineGlobal === "function") {
       updateYearLineGlobal(year);
@@ -376,7 +390,7 @@ Promise.all([d3.json(geoURL), d3.csv(dataURL)]).then(([geo, data]) => {
 
     // Always update subplot if visible
     const updateYearLine = svg_state.property("updateYearLine");
-    if (updateYearLine) updateYearLine(year);
+    if (updateYearLine) updateYearLine(year);*/
   });
 
   update();
@@ -407,7 +421,9 @@ Promise.all([d3.json(geoURL), d3.csv(dataURL)]).then(([geo, data]) => {
           storyState = ["Texas"];
           break;
         case 5:
+          legend.style("opacity", 0).style("visibility", "hidden");
           resetZoom();
+          storyState = ["Texas"];
           break;
         default:
           diffLegend = false;
@@ -541,7 +557,7 @@ function makeLegend(colorScale) {
     .text("Temperature (°C)");
 }
 
-function subplot(stateData, usSeries) {
+/*function subplot(stateData, usSeries) {
   svg_state.selectAll("*").remove();
 
   const margin = { top: 70, right: 40, bottom: 60, left: 70 },
@@ -777,93 +793,159 @@ function subplot(stateData, usSeries) {
     const intercept = (sumY - slope * sumX) / n;
     return { slope, intercept };
   }
+}*/
+
+function createStateVisualizations(stateData, stateName) {
+  // Clear previous
+  d3.selectAll(".state-visualization, .close-btn").remove();
+
+  const svg = d3.select("#chart");
+  const svgWidth = +svg.attr("width") || width; // fallback width
+  const svgHeight = +svg.attr("height") || height; // fallback height
+
+  const vizContainer = svg.append("g").attr("class", "state-visualization");
+
+  // Explicit positions for each quadrant
+  const positions = [
+    { x: 0, y: 0 }, // top-left
+    { x: svgWidth / 2, y: 0 }, // top-right
+    { x: 0, y: svgHeight / 2 }, // bottom-left
+    { x: svgWidth / 2, y: svgHeight / 2 }, // bottom-right
+  ];
+
+  const variables = [
+    { key: "tas_degree", label: "Temperature (°C)" },
+    { key: "pr", label: "Precipitation" },
+    { key: "prsn", label: "Snowfall" },
+    { key: "mrsos", label: "Soil Moisture" },
+  ];
+
+  const graphWidth = svgWidth / 2;
+  const graphHeight = svgHeight / 2;
+  const margin = { top: 40, right: 20, bottom: 40, left: 50 };
+
+  // Create x scale
+  const xScale = d3
+    .scaleLinear()
+    .domain(d3.extent(stateData, (d) => d.year))
+    .range([margin.left, graphWidth - margin.right]);
+
+  // Create each graph
+  variables.forEach((variable, i) => {
+    const pos = positions[i];
+    createSingleGraph(
+      vizContainer,
+      stateData,
+      pos.x,
+      pos.y,
+      graphWidth,
+      graphHeight,
+      xScale,
+      variable.key,
+      variable.label,
+      stateName,
+      margin
+    );
+  });
+
+  addCloseButton(svg);
 }
 
-function moveStateToLeft(selection) {
-  const container = d3.select("#chart");
-  const viewportWidth = window.innerWidth;
-  const viewportHeight = window.innerHeight;
-  const targetX = (viewportWidth * 5) / 100;
-  const targetY = (viewportHeight * 37.5) / 100;
+function createSingleGraph(
+  container,
+  data,
+  x,
+  y,
+  width,
+  height,
+  xScale,
+  dataKey,
+  label,
+  stateName,
+  margin
+) {
+  const graphGroup = container
+    .append("g")
+    .attr("class", `line-graph ${dataKey}`)
+    .attr("transform", `translate(${x}, ${y})`);
 
-  const bbox = selection.getBBox();
-  const currentCenterX = bbox.x + bbox.width / 2;
-  const currentCenterY = bbox.y + bbox.height / 2;
-  const translateXPixels = targetX - currentCenterX;
-  const translateYPixels = targetY - currentCenterY;
+  // Y scale for this graph
+  const yScale = d3
+    .scaleLinear()
+    .domain(d3.extent(data, (d) => d[dataKey]))
+    .range([height - margin.bottom, margin.top])
+    .nice();
 
-  const translateXvw = (translateXPixels / viewportWidth) * 100;
-  const translateYvh = (translateYPixels / viewportHeight) * 100;
+  // Background
+  graphGroup
+    .append("rect")
+    .attr("width", width)
+    .attr("height", height)
+    .attr("fill", "rgba(255,255,255,0.9)")
+    .attr("stroke", "#ddd");
 
-  const selectClass = document.querySelector(".selected");
-  let offset = 0;
-  switch (plotName) {
-    case "Montana":
-    case "Texas":
-      offset = 5;
-      break;
-    case "Iowa":
-    case "Missouri":
-    case "Nevada":
-    case "Idaho":
-    case "New York":
-      offset = 2.5;
-      break;
-    case "Illinois":
-    case "Wisconsin":
-    case "Pennsylvania":
-    case "Arizona":
-    case "New Mexico":
-      offset = 2;
-      break;
-    case "Oregon":
-    case "Washington":
-    case "Colorado":
-    case "Minnesota":
-    case "Wyoming":
-      offset = 3.5;
-      break;
-    case "Oklahoma":
-    case "Nebraska":
-    case "Florida":
-    case "North Carolina":
-      offset = 4.25;
-      break;
-    case "California":
-    case "Kansas":
-    case "South Dakota":
-    case "North Dakota":
-    case "Tennessee":
-    case "Michigan":
-    case "Kentucky":
-    case "Virginia":
-      offset = 4;
-      break;
-    case "Utah":
-    case "Arkansas":
-    case "Louisiana":
-    case "Mississippi":
-    case "Alabama":
-    case "Georgia":
-    case "South Carolina":
-    case "West Virginia":
-    case "Ohio":
-    case "Maryland":
-      offset = 1.5;
-      break;
-    case "Indiana":
-    case "Massachusetts":
-    case "Maine":
-      offset = 1;
-      break;
-    default:
-      break;
-  }
+  // Line
+  const line = d3
+    .line()
+    .x((d) => xScale(d.year))
+    .y((d) => yScale(d[dataKey]))
+    .curve(d3.curveMonotoneX);
 
-  if (selectClass) {
-    selectClass.style.setProperty("--x", translateXvw - offset + "vw");
-    selectClass.style.setProperty("--y", translateYvh + "vh");
-  }
+  graphGroup
+    .append("path")
+    .datum(data)
+    .attr("d", line)
+    .attr("fill", "none")
+    .attr("stroke", "#2c5aa0")
+    .attr("stroke-width", 2);
+
+  // Axes
+  graphGroup
+    .append("g")
+    .attr("transform", `translate(0, ${height - margin.bottom})`)
+    .call(d3.axisBottom(xScale).tickFormat(d3.format("d")));
+
+  graphGroup
+    .append("g")
+    .attr("transform", `translate(${margin.left}, 0)`)
+    .call(d3.axisLeft(yScale));
+
+  // Labels
+  graphGroup
+    .append("text")
+    .attr("x", width / 2)
+    .attr("y", 20)
+    .attr("text-anchor", "middle")
+    .style("font-weight", "bold")
+    .text(`${label} - ${stateName}`);
+}
+
+function addCloseButton(svg) {
+  const closeBtn = svg
+    .append("g")
+    .attr("class", "close-btn")
+    .attr("transform", "translate(20, 20)")
+    .style("cursor", "pointer")
+    .on("click", function () {
+      d3.selectAll(".state-visualization").remove();
+      d3.selectAll(".close-btn").remove();
+      d3.selectAll(".state").classed("selected", false);
+    });
+
+  closeBtn
+    .append("circle")
+    .attr("r", 12)
+    .attr("fill", "#ff4444")
+    .attr("stroke", "#cc0000")
+    .attr("stroke-width", 1);
+
+  closeBtn
+    .append("text")
+    .attr("text-anchor", "middle")
+    .attr("dy", "0.3em")
+    .attr("fill", "white")
+    .style("font-weight", "bold")
+    .text("×");
 }
 
 const showFilter = document.getElementById("showFilter");
