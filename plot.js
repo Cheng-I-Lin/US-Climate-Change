@@ -2,12 +2,12 @@ import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7.9.0/+esm";
 import scrollama from "https://cdn.jsdelivr.net/npm/scrollama@3.2.0/+esm";
 
 // config
-const width = 1000,
-  height = 600;
+const WIDTH = 1000,
+  HEIGHT = 600;
 
 const svg = d3
   .select("#chart")
-  .attr("viewBox", `0 0 ${width} ${height}`)
+  .attr("viewBox", `0 0 ${WIDTH} ${HEIGHT}`)
   .style("overflow", "hidden");
 
 /*const svg_state = d3
@@ -32,10 +32,12 @@ var enableUser = false;
 var currentSlide = 0;
 var storyScenario = "SSP245";
 var diffLegend = false;
-var storyState = [];
+const storyState = ["Michigan", "Rhode Island", "New York"];
 
 // Store original transform state
 let currentZoomState = null;
+let currentStateData=null;
+let zoomGraph = false;
 
 //console.log(currentSlide);
 
@@ -117,14 +119,14 @@ Promise.all([d3.json(geoURL), d3.csv(dataURL)]).then(([geo, data]) => {
     type: "FeatureCollection",
     features: mainlandStates,
   };
-  const projection = d3.geoIdentity().fitSize([width, height], mainlandGeo);
+  const projection = d3.geoIdentity().fitSize([WIDTH, HEIGHT], mainlandGeo);
   const path = d3.geoPath().projection(projection);
 
   //makeLegend(color);
 
   const g = svg
     .append("g")
-    .attr("transform", `scale(1, -1) translate(0, -${height})`);
+    .attr("transform", `scale(1, -1) translate(0, -${HEIGHT})`);
 
   let legendHover;
   const states = g
@@ -230,7 +232,7 @@ Promise.all([d3.json(geoURL), d3.csv(dataURL)]).then(([geo, data]) => {
         if (enableUser) {
           if (event.currentTarget.getAttribute("fill") != "#ccc") {
             const name = d.properties.name;
-            const stateData = data.filter(
+            currentStateData = data.filter(
               (d) =>
                 d.state === name &&
                 d.year !== -1 &&
@@ -238,7 +240,7 @@ Promise.all([d3.json(geoURL), d3.csv(dataURL)]).then(([geo, data]) => {
                 d.model === model
             );
             if (!isSelected) {
-              createStateVisualizations(stateData, name);
+              createSummaryStats(currentStateData);
             }
             zoomInState(d, event.currentTarget);
             selectState();
@@ -277,9 +279,12 @@ Promise.all([d3.json(geoURL), d3.csv(dataURL)]).then(([geo, data]) => {
           }
         }
       });
+    d3.select("#stats").on("click", () => {
+      createStateVisualizations(currentStateData, currentZoomState);
+    });
   }
 
-  const flipTransform = `scale(1, -1) translate(0, -${height})`;
+  const flipTransform = `scale(1, -1) translate(0, -${HEIGHT})`;
 
   // Zoom to state function
   function zoomInState(selectedState, clickedElement) {
@@ -299,11 +304,11 @@ Promise.all([d3.json(geoURL), d3.csv(dataURL)]).then(([geo, data]) => {
     const y = (bounds[0][1] + bounds[1][1]) / 2;
     const scale = Math.max(
       1,
-      Math.min(8, 0.9 / Math.max(dx / width, dy / height))
+      Math.min(8, 0.9 / Math.max(dx / WIDTH, dy / HEIGHT))
     );
 
     // Calculate the translate to center the selected state
-    const translate = [width / 2 - scale * x, height / 2 - scale * y];
+    const translate = [WIDTH / 2 - scale * x, HEIGHT / 2 - scale * y];
 
     if (!isSelected) {
       // Apply fade to all states
@@ -334,6 +339,7 @@ Promise.all([d3.json(geoURL), d3.csv(dataURL)]).then(([geo, data]) => {
         .attr("transform", `${flipTransform} translate(0,0) scale(1)`);
       currentZoomState = null;
       isSelected = false;
+      zoomGraph = false;
     }
   }
 
@@ -401,7 +407,10 @@ Promise.all([d3.json(geoURL), d3.csv(dataURL)]).then(([geo, data]) => {
       //root.style.setProperty("--bg-color", "rgb(238, 238, 238)");
       legend.style("opacity", 0).style("visibility", "hidden");
     } else {
-      legend.style("opacity", 1).style("visibility", "visible");
+      legend
+        .style("opacity", 1)
+        .style("display", "block")
+        .style("visibility", "visible");
       switch (slide) {
         case 1:
           storyScenario = "SSP245";
@@ -418,16 +427,16 @@ Promise.all([d3.json(geoURL), d3.csv(dataURL)]).then(([geo, data]) => {
           break;
         case 4:
           legend.style("opacity", 0).style("visibility", "hidden");
-          storyState = ["Texas"];
           break;
         case 5:
           legend.style("opacity", 0).style("visibility", "hidden");
+          d3.selectAll(
+            ".state-visualization, .close-btn, .state-summary"
+          ).remove();
           resetZoom();
-          storyState = ["Texas"];
           break;
         default:
           diffLegend = false;
-          storyState = [];
           break;
       }
     }
@@ -470,7 +479,10 @@ function selectState() {
     });*/
   d3.select("#legend")
     .style("opacity", isSelected ? 0 : 1)
-    .style("visibility", isSelected ? "hidden" : "visible");
+    .style("display", isSelected ? "none" : "block");
+  d3.select("#stats")
+    .style("opacity", isSelected ? 1 : 0)
+    .style("display", isSelected ? "block" : "none");
   //svg_state.style("display", legendVisible ? "none" : "block");
 }
 
@@ -795,13 +807,39 @@ function makeLegend(colorScale) {
   }
 }*/
 
+function createSummaryStats(stateData) {
+  d3.selectAll(".state-summary").remove();
+  const svg = d3.select("#stats");
+
+  const dl = svg.append("dl").attr("class", "state-summary");
+
+  const means = {
+    tas: d3.mean(stateData, (d) => d.tas_degree).toFixed(2),
+    pr: d3.mean(stateData, (d) => d.pr).toFixed(2),
+    prsn: d3.mean(stateData, (d) => d.prsn).toFixed(2),
+    mrsos: d3.mean(stateData, (d) => d.mrsos).toFixed(2),
+  };
+
+  dl.append("dt").text("TAS Mean");
+  dl.append("dd").text(means["tas"]);
+
+  dl.append("dt").text("PR Mean");
+  dl.append("dd").text(means["pr"]);
+
+  dl.append("dt").text("PRSN Mean");
+  dl.append("dd").text(means["prsn"]);
+
+  dl.append("dt").text("MRSOS Mean");
+  dl.append("dd").text(means["mrsos"]);
+}
+
 function createStateVisualizations(stateData, stateName) {
   // Clear previous
   d3.selectAll(".state-visualization, .close-btn").remove();
 
   const svg = d3.select("#chart");
-  const svgWidth = +svg.attr("width") || width; // fallback width
-  const svgHeight = +svg.attr("height") || height; // fallback height
+  const svgWidth = +svg.attr("width") || WIDTH; // fallback width
+  const svgHeight = +svg.attr("height") || HEIGHT; // fallback height
 
   const vizContainer = svg.append("g").attr("class", "state-visualization");
 
@@ -864,10 +902,43 @@ function createSingleGraph(
   stateName,
   margin
 ) {
+  let className = zoomGraph ? "zoom-graph" : "line-graph";
   const graphGroup = container
     .append("g")
-    .attr("class", `line-graph ${dataKey}`)
-    .attr("transform", `translate(${x}, ${y})`);
+    .attr("class", `${className} ${dataKey}`)
+    .attr("transform", `translate(${x}, ${y})`)
+    .on("click", (event) => {
+      const allGraphs = d3.selectAll(".line-graph").nodes();
+      if (!zoomGraph) {
+        allGraphs.forEach((g) => {
+          d3.select(g).style("visibility", "hidden");
+        });
+        const newScale = d3
+          .scaleLinear()
+          .domain(d3.extent(data, (d) => d.year))
+          .range([margin.left, WIDTH - margin.right]);
+        zoomGraph = true;
+        createSingleGraph(
+          container,
+          data,
+          0,
+          0,
+          WIDTH,
+          HEIGHT,
+          newScale,
+          dataKey,
+          label,
+          stateName,
+          margin
+        );
+      } else {
+        d3.select(".zoom-graph").remove();
+        allGraphs.forEach((g) => {
+          d3.select(g).style("visibility", "visible");
+        });
+        zoomGraph = false;
+      }
+    });
 
   // Y scale for this graph
   const yScale = d3
@@ -924,12 +995,13 @@ function addCloseButton(svg) {
   const closeBtn = svg
     .append("g")
     .attr("class", "close-btn")
-    .attr("transform", "translate(20, 20)")
+    .attr("transform", `translate(${WIDTH - 20}, 20)`)
     .style("cursor", "pointer")
     .on("click", function () {
       d3.selectAll(".state-visualization").remove();
       d3.selectAll(".close-btn").remove();
       d3.selectAll(".state").classed("selected", false);
+      zoomGraph = false;
     });
 
   closeBtn

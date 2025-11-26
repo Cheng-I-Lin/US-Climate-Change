@@ -153,7 +153,6 @@ input[type="range"]:hover {
   transition: opacity 0.15s ease-in-out;
 }
 
-
 #main-container {
   padding-top: 25vh;
   position: relative;
@@ -246,7 +245,7 @@ a:hover {
 }
 
 .line-graph:hover rect {
-  fill: rgba(255, 255, 255, 0.95);
+  fill: rgba(235, 235, 235, 0.95);
 }
 
 .dot {
@@ -272,4 +271,28 @@ a:hover {
 .y-axis line {
   stroke: #ccc;
   shape-rendering: crispEdges;
+}
+
+#stats {
+  display: none;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+  transition: 200ms linear;
+  dl {
+    display: grid;
+    grid-template-columns: repeat(auto, 1fr);
+  }
+  dt {
+    grid-row: 1;
+  }
+  dd {
+    grid-row: 2;
+    font-size: 2em;
+    margin: 0;
+  }
+}
+
+#stats:hover{
+  transform: scale(1.05);
 }
