@@ -248,7 +248,7 @@ a:hover {
   fill: rgba(235, 235, 235, 0.95);
 }
 
-.dot {
+/*.dot {
   transition: all 0.3s;
   cursor: pointer;
 }
@@ -257,6 +257,14 @@ a:hover {
   r: 6;
   fill: #ff6b6b;
   stroke: #ff6b6b;
+} */
+
+.line-graph circle {
+  transition: 0.3s;
+}
+
+.close-btn:hover circle{
+  transform: scale(1.2);
 }
 
 .x-axis,

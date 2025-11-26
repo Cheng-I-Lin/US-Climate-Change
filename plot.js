@@ -36,8 +36,11 @@ const storyState = ["Michigan", "Rhode Island", "New York"];
 
 // Store original transform state
 let currentZoomState = null;
-let currentStateData=null;
+let currentStateData = null;
 let zoomGraph = false;
+
+let brushExtent = null;
+let originalData = null;
 
 //console.log(currentSlide);
 
@@ -161,10 +164,10 @@ Promise.all([d3.json(geoURL), d3.csv(dataURL)]).then(([geo, data]) => {
     const year = +d3.select("#yearSlider").node().value;
     let yearValue = year;
 
-    if (!diffLegend) {
-      makeLegend(color);
-    } else {
+    if (diffLegend || (enableUser && scenario === "Overall Difference")) {
       makeLegend(diffColor);
+    } else {
+      makeLegend(color);
     }
 
     if (year === years[1] - 1) {
@@ -200,7 +203,7 @@ Promise.all([d3.json(geoURL), d3.csv(dataURL)]).then(([geo, data]) => {
           return "#ccc";
         }
         const name = d.properties.name;
-        if (currentSlide === 3 || scenario === "Overall Difference") {
+        if (currentSlide === 3 || (enableUser && scenario === "Overall Difference")) {
           return lookup[name] ? diffColor(lookup[name]) : "#ccc";
         } else {
           if ([4, 5].includes(currentSlide)) {
@@ -280,7 +283,9 @@ Promise.all([d3.json(geoURL), d3.csv(dataURL)]).then(([geo, data]) => {
         }
       });
     d3.select("#stats").on("click", () => {
+      //createGraphButtons();
       createStateVisualizations(currentStateData, currentZoomState);
+      d3.select("#stats").style("opacity", 0).style("display", "none");
     });
   }
 
@@ -407,10 +412,12 @@ Promise.all([d3.json(geoURL), d3.csv(dataURL)]).then(([geo, data]) => {
       //root.style.setProperty("--bg-color", "rgb(238, 238, 238)");
       legend.style("opacity", 0).style("visibility", "hidden");
     } else {
-      legend
-        .style("opacity", 1)
-        .style("display", "block")
-        .style("visibility", "visible");
+      if (!isSelected) {
+        legend
+          .style("opacity", 1)
+          .style("display", "block")
+          .style("visibility", "visible");
+      }
       switch (slide) {
         case 1:
           storyScenario = "SSP245";
@@ -452,7 +459,7 @@ Promise.all([d3.json(geoURL), d3.csv(dataURL)]).then(([geo, data]) => {
     currentSlide = response.index;
     onSlideChange(currentSlide);
     update();
-    //console.log(currentSlide);
+    console.log(diffLegend);
   }
 
   const scroller = scrollama();
@@ -807,8 +814,23 @@ function makeLegend(colorScale) {
   }
 }*/
 
+function createGraphButtons() {
+  d3.selectAll(".state-summary").remove();
+  d3.selectAll(".graph-buttons").remove();
+  const svg = d3.select("#stats");
+
+  const dl = svg.append("dl").attr("class", "graph-buttons");
+
+  dl.append("dt").text("Brush");
+  dl.append("dd").text("HI");
+
+  dl.append("dt").text("Reset");
+  dl.append("dd").text("HI");
+}
+
 function createSummaryStats(stateData) {
   d3.selectAll(".state-summary").remove();
+  d3.selectAll(".graph-buttons").remove();
   const svg = d3.select("#stats");
 
   const dl = svg.append("dl").attr("class", "state-summary");
@@ -835,6 +857,7 @@ function createSummaryStats(stateData) {
 
 function createStateVisualizations(stateData, stateName) {
   // Clear previous
+  zoomGraph = false;
   d3.selectAll(".state-visualization, .close-btn").remove();
 
   const svg = d3.select("#chart");
@@ -1002,6 +1025,7 @@ function addCloseButton(svg) {
       d3.selectAll(".close-btn").remove();
       d3.selectAll(".state").classed("selected", false);
       zoomGraph = false;
+      d3.select("#stats").style("opacity", 1).style("display", "block");
     });
 
   closeBtn
