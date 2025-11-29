@@ -244,9 +244,10 @@ a:hover {
   transition: fill 0.3s;
 }
 
-.line-graph:hover rect {
+.line-graph:not([data-brushing="true"]):hover rect {
   fill: rgba(235, 235, 235, 0.95);
 }
+
 
 /*.dot {
   transition: all 0.3s;
@@ -263,7 +264,7 @@ a:hover {
   transition: 0.3s;
 }
 
-.close-btn:hover circle{
+.close-btn:hover circle {
   transform: scale(1.2);
 }
 
@@ -281,17 +282,13 @@ a:hover {
   shape-rendering: crispEdges;
 }
 
-#stats {
-  display: none;
-  width: 100%;
-  text-align: center;
-  box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
-  transition: 200ms linear;
+.gridLayout {
   dl {
     display: grid;
     grid-template-columns: repeat(auto, 1fr);
   }
   dt {
+    font-weight: bold;
     grid-row: 1;
   }
   dd {
@@ -301,6 +298,50 @@ a:hover {
   }
 }
 
-#stats:hover{
+#stats {
+  display: none;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+  transition: 200ms linear;
+}
+
+#stats:hover {
   transform: scale(1.05);
+}
+
+#graphButtons {
+  display: none;
+  width: 100%;
+  text-align: center;
+}
+
+button {
+  border-radius: 0.25em;
+  font-size: 1em;
+  width: 50%;
+}
+
+button:hover {
+  background-color: #bfddfd;
+}
+
+@keyframes marching-ants {
+  to {
+    stroke-dashoffset: -8; /* 5 + 3 */
+  }
+}
+
+.selection {
+  fill-opacity: 0.1;
+  stroke: black;
+  stroke-opacity: 0.7;
+  stroke-dasharray: 5 3;
+  animation: marching-ants 2s linear infinite;
+}
+
+/* Target only the overlay, not the selection */
+.line-graph .brush rect:not(.selection)  {
+  fill: transparent !important;
+  pointer-events: all;
 }

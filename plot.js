@@ -40,7 +40,7 @@ let currentStateData = null;
 let zoomGraph = false;
 
 let brushExtent = null;
-let originalData = null;
+let isBrush = true;
 
 //console.log(currentSlide);
 
@@ -203,7 +203,10 @@ Promise.all([d3.json(geoURL), d3.csv(dataURL)]).then(([geo, data]) => {
           return "#ccc";
         }
         const name = d.properties.name;
-        if (currentSlide === 3 || (enableUser && scenario === "Overall Difference")) {
+        if (
+          currentSlide === 3 ||
+          (enableUser && scenario === "Overall Difference")
+        ) {
           return lookup[name] ? diffColor(lookup[name]) : "#ccc";
         } else {
           if ([4, 5].includes(currentSlide)) {
@@ -286,6 +289,7 @@ Promise.all([d3.json(geoURL), d3.csv(dataURL)]).then(([geo, data]) => {
       //createGraphButtons();
       createStateVisualizations(currentStateData, currentZoomState);
       d3.select("#stats").style("opacity", 0).style("display", "none");
+      d3.select("#graphButtons").style("opacity", 1).style("display", "block");
     });
   }
 
@@ -440,6 +444,9 @@ Promise.all([d3.json(geoURL), d3.csv(dataURL)]).then(([geo, data]) => {
           d3.selectAll(
             ".state-visualization, .close-btn, .state-summary"
           ).remove();
+          d3.select("#graphButtons")
+            .style("opacity", 0)
+            .style("display", "none");
           resetZoom();
           break;
         default:
@@ -459,7 +466,6 @@ Promise.all([d3.json(geoURL), d3.csv(dataURL)]).then(([geo, data]) => {
     currentSlide = response.index;
     onSlideChange(currentSlide);
     update();
-    console.log(diffLegend);
   }
 
   const scroller = scrollama();
@@ -815,22 +821,35 @@ function makeLegend(colorScale) {
 }*/
 
 function createGraphButtons() {
-  d3.selectAll(".state-summary").remove();
   d3.selectAll(".graph-buttons").remove();
-  const svg = d3.select("#stats");
+  const svg = d3.select("#graphButtons");
 
   const dl = svg.append("dl").attr("class", "graph-buttons");
 
-  dl.append("dt").text("Brush");
-  dl.append("dd").text("HI");
+  dl.append("dt").text("Brush Tool");
+  dl.append("dd").html(`<button id="toggleBrush">On</button>`);
 
-  dl.append("dt").text("Reset");
-  dl.append("dd").text("HI");
+  dl.append("dt").text("Reset Brush");
+  dl.append("dd").html(`<button id="resetBrush">Reset</button>`);
 }
+
+createGraphButtons();
+
+const brushButton = document.getElementById("toggleBrush");
+brushButton.addEventListener("click", () => {
+  isBrush = !isBrush;
+  brushButton.textContent = isBrush ? "On" : "Off";
+  const brush = d3.selectAll(".brush");
+  brush.style("display", isBrush ? "block" : "none");
+  //brush.style('display',isBrush ? "block" : "none");
+});
+
+document.getElementById("resetBrush").addEventListener("click", () => {
+  resetBrush();
+});
 
 function createSummaryStats(stateData) {
   d3.selectAll(".state-summary").remove();
-  d3.selectAll(".graph-buttons").remove();
   const svg = d3.select("#stats");
 
   const dl = svg.append("dl").attr("class", "state-summary");
@@ -905,7 +924,8 @@ function createStateVisualizations(stateData, stateName) {
       variable.key,
       variable.label,
       stateName,
-      margin
+      margin,
+      i === 0
     );
   });
 
@@ -923,7 +943,8 @@ function createSingleGraph(
   dataKey,
   label,
   stateName,
-  margin
+  margin,
+  addBrush = false
 ) {
   let className = zoomGraph ? "zoom-graph" : "line-graph";
   const graphGroup = container
@@ -1012,6 +1033,106 @@ function createSingleGraph(
     .attr("text-anchor", "middle")
     .style("font-weight", "bold")
     .text(`${label} - ${stateName}`);
+
+  // Add brush to the first graph only
+  if (addBrush && !zoomGraph) {
+    addBrushToGraph(graphGroup, width, height, margin, xScale);
+  }
+}
+
+//////////////////////////////
+//////////////////////////////
+//////////////////////////////
+//////////////////////////////
+function addBrushToGraph(graphGroup, width, height, margin, xScale) {
+  // Create brush group
+  const brushGroup = graphGroup.append("g").attr("class", "brush");
+
+  // Create the brush
+  const brush = d3
+    .brushX()
+    .extent([
+      [margin.left, margin.top],
+      [width - margin.right, height - margin.bottom],
+    ])
+    .on("start", brushStarted)
+    .on("brush", brushed)
+    .on("end", brushEnded);
+
+  // Add brush to the group
+  brushGroup.call(brush);
+
+  // Style the selection area
+  /*brushGroup
+    .selectAll(".selection")
+    .attr("fill", "#2c5aa0")
+    .attr("fill-opacity", 0.2)
+    .attr("stroke", "#2c5aa0")
+    .attr("stroke-width", 1);*/
+
+  // Add brush label
+  /*graphGroup
+    .append("text")
+    .attr("x", width / 2)
+    .attr("y", height - 10)
+    .attr("text-anchor", "middle")
+    .style("font-size", "12px")
+    .style("fill", "#666")
+    .text("Drag to select year range");*/
+
+  //graphGroup.selectAll("path, .overlay ~ *").raise();
+}
+
+function brushed(event) {
+  // This function handles the brushing motion
+  // We'll do the actual filtering in brushEnded
+}
+
+// When brush starts
+function brushStarted() {
+  d3.select(".line-graph").attr("data-brushing", "true");
+}
+
+function brushEnded(event) {
+  if (!isBrush) return;
+  d3.select(".line-graph").attr("data-brushing", "false");
+  if (!event.selection) {
+    // If no selection, reset to show all data
+    brushExtent = null;
+    resetBrush();
+    return;
+  }
+
+  // Get the selected year range
+  const [x0, x1] = event.selection;
+  //console.log(event.selection);
+  const xScale = d3
+    .scaleLinear()
+    .domain(d3.extent(currentStateData, (d) => d.year))
+    .range([50, WIDTH / 2 - 20]); // Adjust based on your actual margin and width
+
+  const selectedStartYear = Math.round(xScale.invert(x0));
+  const selectedEndYear = Math.round(xScale.invert(x1));
+
+  brushExtent = [selectedStartYear, selectedEndYear];
+
+  // Filter the data and update all graphs
+  filterDataByYearRange(selectedStartYear, selectedEndYear);
+}
+
+function filterDataByYearRange(startYear, endYear) {
+  const filteredData = currentStateData.filter(
+    (d) => d.year >= startYear && d.year <= endYear
+  );
+
+  // Update all graphs with filtered data
+  createStateVisualizations(filteredData, currentZoomState);
+}
+
+function resetBrush() {
+  brushExtent = null;
+  // Restore all graphs with original data
+  createStateVisualizations(currentStateData, currentZoomState);
 }
 
 function addCloseButton(svg) {
@@ -1025,7 +1146,10 @@ function addCloseButton(svg) {
       d3.selectAll(".close-btn").remove();
       d3.selectAll(".state").classed("selected", false);
       zoomGraph = false;
+      d3.select("#graphButtons").style("opacity", 0).style("display", "none");
       d3.select("#stats").style("opacity", 1).style("display", "block");
+      isBrush = true;
+      brushButton.textContent = "On";
     });
 
   closeBtn
