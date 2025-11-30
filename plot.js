@@ -894,7 +894,7 @@ function createStateVisualizations(stateData, stateName) {
   ];
 
   const variables = [
-    { key: "tas_degree", label: "Temperature (°C)" },
+    { key: "tas_degree", label: "Temperature" },
     { key: "pr", label: "Precipitation" },
     { key: "prsn", label: "Snowfall" },
     { key: "mrsos", label: "Soil Moisture" },
@@ -902,13 +902,14 @@ function createStateVisualizations(stateData, stateName) {
 
   const graphWidth = svgWidth / 2;
   const graphHeight = svgHeight / 2;
-  const margin = { top: 40, right: 20, bottom: 40, left: 50 };
+  const margin = { top: 40, right: 20, bottom: 45, left: 55 };
 
   // Create x scale
   const xScale = d3
     .scaleLinear()
     .domain(d3.extent(stateData, (d) => d.year))
     .range([margin.left, graphWidth - margin.right]);
+    //.nice();
 
   // Create each graph
   variables.forEach((variable, i) => {
@@ -932,6 +933,27 @@ function createStateVisualizations(stateData, stateName) {
   addCloseButton(svg);
 }
 
+// Gridlines function
+function addGridlines(graphGroup, yScale, width, margin) {
+  // Remove existing gridlines if any
+  graphGroup.selectAll(".grid").remove();
+
+  // Calculate the actual plotting area dimensions
+  const plotWidth = width - margin.left;
+
+  // Horizontal gridlines (for Y-axis)
+  graphGroup
+    .append("g")
+    .attr("class", "grid grid-horizontal")
+    .attr("transform", `translate(${margin.left}, 0)`)
+    .call(
+      d3
+        .axisLeft(yScale)
+        .tickSize(-plotWidth) // Negative extends to the right
+        .tickFormat("") // Remove labels
+    );
+}
+
 function createSingleGraph(
   container,
   data,
@@ -946,6 +968,13 @@ function createSingleGraph(
   margin,
   addBrush = false
 ) {
+  const units = {
+    Temperature: "(°C)",
+    Precipitation: "(mm)",
+    Snowfall: "(mm)",
+    "Soil Moisture": "(mm)",
+  };
+
   let className = zoomGraph ? "zoom-graph" : "line-graph";
   const graphGroup = container
     .append("g")
@@ -961,6 +990,7 @@ function createSingleGraph(
           .scaleLinear()
           .domain(d3.extent(data, (d) => d.year))
           .range([margin.left, WIDTH - margin.right]);
+          //;
         zoomGraph = true;
         createSingleGraph(
           container,
@@ -988,8 +1018,8 @@ function createSingleGraph(
   const yScale = d3
     .scaleLinear()
     .domain(d3.extent(data, (d) => d[dataKey]))
-    .range([height - margin.bottom, margin.top])
-    .nice();
+    .range([height - margin.bottom, margin.top]);
+    //.nice();
 
   // Background
   graphGroup
@@ -998,6 +1028,9 @@ function createSingleGraph(
     .attr("height", height)
     .attr("fill", "rgba(255,255,255,0.9)")
     .attr("stroke", "#ddd");
+
+  // Add gridlines to TAS graph
+  addGridlines(graphGroup, yScale, width, margin);
 
   // Line
   const line = d3
@@ -1032,7 +1065,25 @@ function createSingleGraph(
     .attr("y", 20)
     .attr("text-anchor", "middle")
     .style("font-weight", "bold")
-    .text(`${label} - ${stateName}`);
+    .text(`Annual ${label} of ${stateName}`);
+
+  graphGroup
+    .append("text")
+    .attr("x", width / 2)
+    .attr("y", height - 10)
+    .attr("text-anchor", "middle")
+    .style("font-size", "12px")
+    .text("Years");
+
+  graphGroup
+    .append("text")
+    .attr("transform", "rotate(-90)") // Rotate for vertical text
+    .attr("y", 0 + 5) // Position left of the y-axis
+    .attr("x", 0 - height / 2) // Center vertically
+    .attr("dy", "1em") // Adjust vertical alignment
+    .style("text-anchor", "middle")
+    .style("font-size", "12px")
+    .text(`${label} ${units[label]}`);
 
   // Add brush to the first graph only
   if (addBrush && !zoomGraph) {
@@ -1093,6 +1144,8 @@ function brushStarted() {
   d3.select(".line-graph").attr("data-brushing", "true");
 }
 
+let brushScale = null;
+
 function brushEnded(event) {
   if (!isBrush) return;
   d3.select(".line-graph").attr("data-brushing", "false");
@@ -1109,15 +1162,23 @@ function brushEnded(event) {
   const xScale = d3
     .scaleLinear()
     .domain(d3.extent(currentStateData, (d) => d.year))
-    .range([50, WIDTH / 2 - 20]); // Adjust based on your actual margin and width
+    .range([55, WIDTH / 2 - 20]); // Adjust based on your actual margin and width
 
-  const selectedStartYear = Math.round(xScale.invert(x0));
-  const selectedEndYear = Math.round(xScale.invert(x1));
+  const selectedStartYear = Math.round(
+    brushScale ? brushScale.invert(x0) : xScale.invert(x0)
+  );
+  const selectedEndYear = Math.round(
+    brushScale ? brushScale.invert(x1) : xScale.invert(x1)
+  );
 
   brushExtent = [selectedStartYear, selectedEndYear];
 
   // Filter the data and update all graphs
   filterDataByYearRange(selectedStartYear, selectedEndYear);
+  brushScale = d3
+    .scaleLinear()
+    .domain(brushExtent)
+    .range([50, WIDTH / 2 - 20]);
 }
 
 function filterDataByYearRange(startYear, endYear) {
@@ -1131,6 +1192,7 @@ function filterDataByYearRange(startYear, endYear) {
 
 function resetBrush() {
   brushExtent = null;
+  brushScale = null;
   // Restore all graphs with original data
   createStateVisualizations(currentStateData, currentZoomState);
 }
@@ -1150,6 +1212,7 @@ function addCloseButton(svg) {
       d3.select("#stats").style("opacity", 1).style("display", "block");
       isBrush = true;
       brushButton.textContent = "On";
+      brushScale = null;
     });
 
   closeBtn
