@@ -32,7 +32,65 @@ var enableUser = false;
 var currentSlide = 0;
 var storyScenario = "SSP245";
 var diffLegend = false;
-const storyState = ["Michigan", "Rhode Island", "New York"];
+const northStates = [
+  "Washington",
+  "Idaho",
+  "Montana",
+  "North Dakota",
+  "South Dakota",
+  "Wyoming",
+  "Oregon",
+  "Nebraska",
+  "Minnesota",
+  "Iowa",
+  "Wisconsin",
+  "Michigan",
+  "Missouri",
+  "Illinois",
+  "Indiana",
+  "Ohio",
+  "Kentucky",
+  "West Virginia",
+  "Virginia",
+  "Pennsylvania",
+  "New York",
+  "Vermont",
+  "Nevada",
+  "Utah",
+  "Colorado",
+  "North Carolina",
+];
+const southStates = [
+  "California",
+  "Arizona",
+  "Texas",
+  "Louisiana",
+  "Mississippi",
+  "Alabama",
+  "Kansas",
+  "Oklahoma",
+  "Arkansas",
+];
+const northeastStates = [
+  "New Jersey",
+  "Connecticut",
+  "Massachusetts",
+  "New Hampshire",
+  "Maine",
+  "Maryland",
+];
+const storyState = [
+  "New Mexico",
+  "Georgia",
+  "Rhode Island",
+  "South Carolina",
+  "Delaware",
+  "Tennessee",
+  "Florida",
+];
+
+let northData, southData, northeastData, storyData;
+let northAvg, southAvg, northeastAvg, storyAvg;
 
 // Store original transform state
 let currentZoomState = null;
@@ -89,8 +147,8 @@ Promise.all([d3.json(geoURL), d3.csv(dataURL)]).then(([geo, data]) => {
     .join("option")
     .text((d) => d);
 
-  const usSeriesByModel = {};
-  for (const s of scenarios) {
+  //const usSeriesByModel = {};
+  /*for (const s of scenarios) {
     for (const m of models) {
       const arr = data.filter((d) => d.scenario === s && d.model === m);
       const rolled = d3.rollups(
@@ -103,7 +161,7 @@ Promise.all([d3.json(geoURL), d3.csv(dataURL)]).then(([geo, data]) => {
         .map(([year, mean]) => ({ year: +year, mean: +mean }))
         .sort((a, b) => a.year - b.year);
     }
-  }
+  }*/
 
   const years = Array.from(new Set(data.map((d) => d.year))).sort(
     (a, b) => a - b
@@ -158,6 +216,71 @@ Promise.all([d3.json(geoURL), d3.csv(dataURL)]).then(([geo, data]) => {
       if (legendHover) hoverOut(legendHover);
     });
 
+  function createAvg(filteredData) {
+    // Group by year and calculate averages for each column
+    const groupedByYear = d3.rollup(
+      filteredData,
+      (values) => ({
+        tas_degree: d3.mean(values, (d) => d.tas_degree),
+        pr: d3.mean(values, (d) => d.pr),
+        prsn: d3.mean(values, (d) => d.prsn),
+        mrsos: d3.mean(values, (d) => d.mrsos),
+        count: values.length,
+      }),
+      (d) => d.year
+    );
+
+    // Convert to array with column format
+    return Array.from(groupedByYear, ([year, stats]) => ({
+      year: +year, // Convert year to number
+      tas_degree: stats.tas_degree,
+      pr: stats.pr,
+      prsn: stats.prsn,
+      mrsos: stats.mrsos,
+      count: stats.count, // Optional: keep count of data points
+    })).sort((a, b) => a.year - b.year);
+  }
+
+  northData = data.filter(
+    (d) =>
+      northStates.includes(d.state) &&
+      d.year !== -1 &&
+      d.scenario === "Overall Difference" &&
+      d.model === "All Models"
+  );
+  northAvg = createAvg(northData);
+
+  southData = data.filter(
+    (d) =>
+      southStates.includes(d.state) &&
+      d.year !== -1 &&
+      d.scenario === "Overall Difference" &&
+      d.model === "All Models"
+  );
+  southAvg = createAvg(southData);
+
+  northeastData = data.filter(
+    (d) =>
+      northeastStates.includes(d.state) &&
+      d.year !== -1 &&
+      d.scenario === "Overall Difference" &&
+      d.model === "All Models"
+  );
+  northeastAvg = createAvg(northeastData);
+
+  storyData = data.filter(
+    (d) =>
+      storyState.includes(d.state) &&
+      d.year !== -1 &&
+      d.scenario === "Overall Difference" &&
+      d.model === "All Models"
+  );
+  storyAvg = createAvg(storyData);
+
+//   d3.select('#chart').selectAll('path').nodes().forEach((d)=>{
+//     console.log(d);
+//   });
+
   function update() {
     const model = modelSelect.node().value;
     const scenario = scenarioSelect.node().value;
@@ -193,13 +316,24 @@ Promise.all([d3.json(geoURL), d3.csv(dataURL)]).then(([geo, data]) => {
 
     const lookup = {};
     filtered.forEach((d) => (lookup[d.state] = d.tas_degree));
-    const filteredLookup = Object.fromEntries(
+
+    //Maybe move code outside of update loop to run only once, and set an unique color so it doesn't depend on lookup/filtered
+    const filteredExceptionLookup = Object.fromEntries(
       Object.entries(lookup).filter(([key]) => storyState.includes(key))
+    );
+    const filteredNorthLookup = Object.fromEntries(
+      Object.entries(lookup).filter(([key]) => northStates.includes(key))
+    );
+    const filteredSouthLookup = Object.fromEntries(
+      Object.entries(lookup).filter(([key]) => southStates.includes(key))
+    );
+    const filteredNortheastLookup = Object.fromEntries(
+      Object.entries(lookup).filter(([key]) => northeastStates.includes(key))
     );
     states
       .style("fill-opacity", 0.7)
       .attr("fill", (d) => {
-        if (currentSlide === 0) {
+        if ([0, 4].includes(currentSlide)) {
           return "#ccc";
         }
         const name = d.properties.name;
@@ -209,9 +343,21 @@ Promise.all([d3.json(geoURL), d3.csv(dataURL)]).then(([geo, data]) => {
         ) {
           return lookup[name] ? diffColor(lookup[name]) : "#ccc";
         } else {
-          if ([4, 5].includes(currentSlide)) {
+          if ([5, 6].includes(currentSlide)) {
             //Colors only the selected states
-            return Object.keys(filteredLookup).includes(name)
+            return Object.keys(filteredNorthLookup).includes(name)
+              ? diffColor(lookup[name])
+              : "#ccc";
+          } else if ([7, 8].includes(currentSlide)) {
+            return Object.keys(filteredSouthLookup).includes(name)
+              ? diffColor(lookup[name])
+              : "#ccc";
+          } else if ([9, 10].includes(currentSlide)) {
+            return Object.keys(filteredNortheastLookup).includes(name)
+              ? diffColor(lookup[name])
+              : "#ccc";
+          } else if (currentSlide >= 11 && currentSlide <= 18) {
+            return Object.keys(filteredExceptionLookup).includes(name)
               ? diffColor(lookup[name])
               : "#ccc";
           } else {
@@ -234,7 +380,7 @@ Promise.all([d3.json(geoURL), d3.csv(dataURL)]).then(([geo, data]) => {
       })
       .on("mouseout", () => tooltip.style("display", "none"))
       .on("click", (event, d) => {
-        const usSeries = usSeriesByModel[scenario + model];
+        //const usSeries = usSeriesByModel[scenario + model];
         if (enableUser) {
           if (event.currentTarget.getAttribute("fill") != "#ccc") {
             const name = d.properties.name;
@@ -287,9 +433,13 @@ Promise.all([d3.json(geoURL), d3.csv(dataURL)]).then(([geo, data]) => {
       });
     d3.select("#stats").on("click", () => {
       //createGraphButtons();
-      createStateVisualizations(currentStateData, currentZoomState);
-      d3.select("#stats").style("opacity", 0).style("display", "none");
-      d3.select("#graphButtons").style("opacity", 1).style("display", "block");
+      if (enableUser) {
+        createStateVisualizations(currentStateData, currentZoomState);
+        d3.select("#stats").style("opacity", 0).style("display", "none");
+        d3.select("#graphButtons")
+          .style("opacity", 1)
+          .style("display", "block");
+      }
     });
   }
 
@@ -364,15 +514,18 @@ Promise.all([d3.json(geoURL), d3.csv(dataURL)]).then(([geo, data]) => {
     update();
     if (currentZoomState) {
       const model = modelSelect.node().value;
-      const filtered = data.filter(
+      currentStateData = data.filter(
         (d) =>
           d.scenario === event.target.value &&
           d.year !== -1 &&
           d.model === model &&
           d.state === currentZoomState
       );
-      const usSeries = usSeriesByModel[event.target.value + model];
-      createStateVisualizations(filtered, currentZoomState);
+      //const usSeries = usSeriesByModel[event.target.value + model];
+      if (d3.selectAll(".state-visualization").nodes().length !== 0) {
+        createStateVisualizations(currentStateData, currentZoomState);
+      }
+      createSummaryStats(currentStateData);
     }
   });
 
@@ -380,15 +533,18 @@ Promise.all([d3.json(geoURL), d3.csv(dataURL)]).then(([geo, data]) => {
     update();
     if (currentZoomState) {
       const scenario = scenarioSelect.node().value;
-      const filtered = data.filter(
+      currentStateData = data.filter(
         (d) =>
           d.scenario === scenario &&
           d.year !== -1 &&
           d.model === event.target.value &&
           d.state === currentZoomState
       );
-      const usSeries = usSeriesByModel[scenario + event.target.value];
-      createStateVisualizations(filtered, currentZoomState);
+      //const usSeries = usSeriesByModel[scenario + event.target.value];
+      if (d3.selectAll(".state-visualization").nodes().length !== 0) {
+        createStateVisualizations(currentStateData, currentZoomState);
+      }
+      createSummaryStats(currentStateData);
     }
   });
 
@@ -410,11 +566,35 @@ Promise.all([d3.json(geoURL), d3.csv(dataURL)]).then(([geo, data]) => {
 
   update();
 
+  function hideLegend() {
+    d3.select("#legend")
+      .style("opacity", 0)
+      .style("visibility", "hidden")
+      .style("display", "none");
+  }
+
+  function hideStats() {
+    d3.select("#stats").style("opacity", 0).style("display", "none");
+  }
+
+  function showStats() {
+    d3.select("#stats").style("opacity", 1).style("display", "block");
+  }
+
+  function hideButtons() {
+    d3.selectAll(".state-visualization").remove();
+    d3.select("#graphButtons").style("opacity", 0).style("display", "none");
+  }
+
+  function showButtons() {
+    d3.select("#graphButtons").style("opacity", 1).style("display", "block");
+  }
+
   function onSlideChange(slide) {
     const legend = d3.select("#legend");
     if (slide === 0) {
       //root.style.setProperty("--bg-color", "rgb(238, 238, 238)");
-      legend.style("opacity", 0).style("visibility", "hidden");
+      hideLegend();
     } else {
       if (!isSelected) {
         legend
@@ -437,10 +617,88 @@ Promise.all([d3.json(geoURL), d3.csv(dataURL)]).then(([geo, data]) => {
           diffLegend = true;
           break;
         case 4:
-          legend.style("opacity", 0).style("visibility", "hidden");
+          hideStats();
+          hideLegend();
           break;
         case 5:
-          legend.style("opacity", 0).style("visibility", "hidden");
+          createSummaryStats(northAvg);
+          hideButtons();
+          showStats();
+          hideLegend();
+          break;
+        case 6:
+          currentStateData = northAvg;
+          currentZoomState = "Northern States";
+          createStateVisualizations(northAvg, "Northern States", false);
+          showButtons();
+          hideStats();
+          hideLegend();
+          break;
+        case 7:
+          createSummaryStats(southData);
+          hideButtons();
+          showStats();
+          hideLegend();
+          break;
+        case 8:
+          currentStateData = southAvg;
+          currentZoomState = "Southern States";
+          createStateVisualizations(southAvg, "Southern States", false);
+          showButtons();
+          hideStats();
+          hideLegend();
+          break;
+        case 9:
+          createSummaryStats(northeastData);
+          hideButtons();
+          showStats();
+          hideLegend();
+          break;
+        case 10:
+          currentStateData = northeastAvg;
+          currentZoomState = "Northeastern States";
+          createStateVisualizations(northeastAvg, "Northeastern States", false);
+          showButtons();
+          hideStats();
+          hideLegend();
+          break;
+        case 11:
+          hideButtons();
+          hideLegend();
+          break;
+        case 12:
+          createSummaryStats(storyData);
+          hideButtons();
+          hideLegend();
+          break;
+        case 13:
+          createSummaryStats(storyData);
+          hideButtons();
+          hideLegend();
+          break;
+        case 14:
+          createSummaryStats(storyData);
+          hideButtons();
+          hideLegend();
+          break;
+        case 15:
+          createSummaryStats(storyData);
+          hideButtons();
+          hideLegend();
+          break;
+        case 16:
+          createSummaryStats(storyData);
+          hideButtons();
+          hideLegend();
+          break;
+        case 17:
+          createSummaryStats(storyData);
+          hideButtons();
+          hideLegend();
+          break;
+        case 18:
+          hideButtons();
+          hideLegend();
           d3.selectAll(
             ".state-visualization, .close-btn, .state-summary"
           ).remove();
@@ -874,7 +1132,7 @@ function createSummaryStats(stateData) {
   dl.append("dd").text(means["mrsos"]);
 }
 
-function createStateVisualizations(stateData, stateName) {
+function createStateVisualizations(stateData, stateName, button = true) {
   // Clear previous
   zoomGraph = false;
   d3.selectAll(".state-visualization, .close-btn").remove();
@@ -909,7 +1167,7 @@ function createStateVisualizations(stateData, stateName) {
     .scaleLinear()
     .domain(d3.extent(stateData, (d) => d.year))
     .range([margin.left, graphWidth - margin.right]);
-    //.nice();
+  //.nice();
 
   // Create each graph
   variables.forEach((variable, i) => {
@@ -930,7 +1188,7 @@ function createStateVisualizations(stateData, stateName) {
     );
   });
 
-  addCloseButton(svg);
+  if (button) addCloseButton(svg);
 }
 
 // Gridlines function
@@ -990,7 +1248,7 @@ function createSingleGraph(
           .scaleLinear()
           .domain(d3.extent(data, (d) => d.year))
           .range([margin.left, WIDTH - margin.right]);
-          //;
+        //;
         zoomGraph = true;
         createSingleGraph(
           container,
@@ -1019,7 +1277,7 @@ function createSingleGraph(
     .scaleLinear()
     .domain(d3.extent(data, (d) => d[dataKey]))
     .range([height - margin.bottom, margin.top]);
-    //.nice();
+  //.nice();
 
   // Background
   graphGroup
@@ -1187,14 +1445,22 @@ function filterDataByYearRange(startYear, endYear) {
   );
 
   // Update all graphs with filtered data
-  createStateVisualizations(filteredData, currentZoomState);
+  if (currentSlide >= 4 && currentSlide <= 11) {
+    createStateVisualizations(filteredData, currentZoomState, false);
+  } else {
+    createStateVisualizations(filteredData, currentZoomState);
+  }
 }
 
 function resetBrush() {
   brushExtent = null;
   brushScale = null;
   // Restore all graphs with original data
-  createStateVisualizations(currentStateData, currentZoomState);
+  if (currentSlide >= 4 && currentSlide <= 11) {
+    createStateVisualizations(currentStateData, currentZoomState, false);
+  } else {
+    createStateVisualizations(currentStateData, currentZoomState);
+  }
 }
 
 function addCloseButton(svg) {
