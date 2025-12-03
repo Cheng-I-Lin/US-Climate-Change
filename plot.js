@@ -30,6 +30,8 @@ var enableUser = false;
 //const slideNum = d3.select('#mainText').selectAll('div').nodes().length;
 //const slides = Array.from({ length: slideNum }, (_, i) => i + 1);
 var currentSlide = 0;
+//Use previousSlide to decide when to trigger tranistion
+var previousSlide = -1;
 var storyScenario = "SSP245";
 var diffLegend = false;
 const northStates = [
@@ -792,7 +794,7 @@ Promise.all([d3.json(geoURL), d3.csv(dataURL)]).then(([geo, data]) => {
     } else {
       enableUser = false;
     }
-    console.log(currentSlide);
+    //console.log(currentSlide);
     currentSlide = response.index;
     onSlideChange(currentSlide);
     update();
@@ -1191,17 +1193,17 @@ function createSummaryStats(stateData) {
     mrsos: d3.mean(stateData, (d) => d.mrsos).toFixed(2),
   };
 
-  dl.append("dt").text("TAS Mean");
-  dl.append("dd").text(means["tas"]);
+  dl.append("dt").text("Mean Temperature");
+  dl.append("dd").html(`${means["tas"]}<em style="font-size: 0.5em;">°C</em>`);
 
-  dl.append("dt").text("PR Mean");
-  dl.append("dd").text(means["pr"]);
+  dl.append("dt").text("Mean Precipitation");
+  dl.append("dd").html(`${means["pr"]}<em style="font-size: 0.5em;">mm</em>`);
 
-  dl.append("dt").text("PRSN Mean");
-  dl.append("dd").text(means["prsn"]);
+  dl.append("dt").text("Mean Snowfall");
+  dl.append("dd").html(`${means["prsn"]}<em style="font-size: 0.5em;">mm</em>`);
 
-  dl.append("dt").text("MRSOS Mean");
-  dl.append("dd").text(means["mrsos"]);
+  dl.append("dt").text("Mean Soil Moisture");
+  dl.append("dd").html(`${means["mrsos"]}<em style="font-size: 0.5em;">mm</em>`);
 }
 
 function createStateVisualizations(stateData, stateName, button = true) {
