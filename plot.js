@@ -90,7 +90,7 @@ const storyState = [
 ];
 
 let northData, southData, northeastData, storyData;
-let northAvg, southAvg, northeastAvg, storyAvg;
+let northAvg, southAvg, northeastAvg;
 
 // Store original transform state
 let currentZoomState = null;
@@ -198,6 +198,7 @@ Promise.all([d3.json(geoURL), d3.csv(dataURL)]).then(([geo, data]) => {
     .attr("stroke", "#333")
     .attr("stroke-width", 0.5)
     .attr("class", "states")
+    .attr("id", (d) => d.properties.name.replace(/\s/g, ""))
     .on("mouseenter", (event) => {
       hoverOver(event.currentTarget);
       let hoverColor = event.currentTarget.getAttribute("fill");
@@ -275,11 +276,10 @@ Promise.all([d3.json(geoURL), d3.csv(dataURL)]).then(([geo, data]) => {
       d.scenario === "Overall Difference" &&
       d.model === "All Models"
   );
-  storyAvg = createAvg(storyData);
 
-//   d3.select('#chart').selectAll('path').nodes().forEach((d)=>{
-//     console.log(d);
-//   });
+  //   d3.select('#chart').selectAll('path').nodes().forEach((d)=>{
+  //     console.log(d);
+  //   });
 
   function update() {
     const model = modelSelect.node().value;
@@ -433,7 +433,7 @@ Promise.all([d3.json(geoURL), d3.csv(dataURL)]).then(([geo, data]) => {
       });
     d3.select("#stats").on("click", () => {
       //createGraphButtons();
-      if (enableUser) {
+      if (enableUser || (currentSlide >= 12 && currentSlide <= 18)) {
         createStateVisualizations(currentStateData, currentZoomState);
         d3.select("#stats").style("opacity", 0).style("display", "none");
         d3.select("#graphButtons")
@@ -596,7 +596,7 @@ Promise.all([d3.json(geoURL), d3.csv(dataURL)]).then(([geo, data]) => {
       //root.style.setProperty("--bg-color", "rgb(238, 238, 238)");
       hideLegend();
     } else {
-      if (!isSelected) {
+      if (!isSelected && d3.select('#stats').style("display")==='none' && d3.select('#graphButtons').style("display")==='none') {
         legend
           .style("opacity", 1)
           .style("display", "block")
@@ -663,49 +663,118 @@ Promise.all([d3.json(geoURL), d3.csv(dataURL)]).then(([geo, data]) => {
           hideLegend();
           break;
         case 11:
+          resetZoom();
           hideButtons();
           hideLegend();
+          hideStats();
           break;
         case 12:
-          createSummaryStats(storyData);
+          resetZoom();
+          currentStateData = storyData.filter((s) => s.state === "New Mexico");
+          createSummaryStats(currentStateData);
+          if (currentZoomState !== "New Mexico") {
+            zoomInState(
+              mainlandStates.find((s) => s.properties.name === "New Mexico"),
+              d3.selectAll("#NewMexico").node()
+            );
+          }
           hideButtons();
           hideLegend();
+          showStats();
           break;
         case 13:
-          createSummaryStats(storyData);
+          resetZoom();
+          currentStateData = storyData.filter(
+            (s) => s.state === "South Carolina"
+          );
+          createSummaryStats(currentStateData);
+          if (currentZoomState !== "South Carolina") {
+            zoomInState(
+              mainlandStates.find(
+                (s) => s.properties.name === "South Carolina"
+              ),
+              d3.selectAll("#SouthCarolina").node()
+            );
+          }
           hideButtons();
           hideLegend();
+          showStats();
           break;
         case 14:
-          createSummaryStats(storyData);
+          resetZoom();
+          currentStateData = storyData.filter((s) => s.state === "Florida");
+          createSummaryStats(currentStateData);
+          if (currentZoomState !== "Florida") {
+            zoomInState(
+              mainlandStates.find((s) => s.properties.name === "Florida"),
+              d3.selectAll("#Florida").node()
+            );
+          }
           hideButtons();
           hideLegend();
+          showStats();
           break;
         case 15:
-          createSummaryStats(storyData);
+          resetZoom();
+          currentStateData = storyData.filter((s) => s.state === "Georgia");
+          createSummaryStats(currentStateData);
+          if (currentZoomState !== "Georgia") {
+            zoomInState(
+              mainlandStates.find((s) => s.properties.name === "Georgia"),
+              d3.selectAll("#Georgia").node()
+            );
+          }
           hideButtons();
           hideLegend();
+          showStats();
           break;
         case 16:
-          createSummaryStats(storyData);
+          resetZoom();
+          currentStateData = storyData.filter(
+            (s) => s.state === "Rhode Island"
+          );
+          createSummaryStats(currentStateData);
+          if (currentZoomState !== "Rhode Island") {
+            zoomInState(
+              mainlandStates.find((s) => s.properties.name === "Rhode Island"),
+              d3.selectAll("#RhodeIsland").node()
+            );
+          }
           hideButtons();
           hideLegend();
+          showStats();
           break;
         case 17:
-          createSummaryStats(storyData);
+          resetZoom();
+          currentStateData = storyData.filter((s) => s.state === "Delaware");
+          createSummaryStats(currentStateData);
+          if (currentZoomState !== "Delaware") {
+            zoomInState(
+              mainlandStates.find((s) => s.properties.name === "Delaware"),
+              d3.selectAll("#Delaware").node()
+            );
+          }
           hideButtons();
           hideLegend();
+          showStats();
           break;
         case 18:
+          resetZoom();
+          currentStateData = storyData.filter((s) => s.state === "Tennessee");
+          createSummaryStats(currentStateData);
+          if (currentZoomState !== "Tennessee") {
+            zoomInState(
+              mainlandStates.find((s) => s.properties.name === "Tennessee"),
+              d3.selectAll("#Tennessee").node()
+            );
+          }
           hideButtons();
           hideLegend();
-          d3.selectAll(
-            ".state-visualization, .close-btn, .state-summary"
-          ).remove();
+          showStats();
+          d3.selectAll(".state-visualization, .close-btn").remove();
           d3.select("#graphButtons")
             .style("opacity", 0)
             .style("display", "none");
-          resetZoom();
           break;
         default:
           diffLegend = false;
@@ -717,10 +786,13 @@ Promise.all([d3.json(geoURL), d3.csv(dataURL)]).then(([geo, data]) => {
   function onStepEnter(response) {
     const id = response.element.id;
     if (id === "last-text") {
+      resetZoom();
+      hideStats();
       enableUser = true;
     } else {
       enableUser = false;
     }
+    console.log(currentSlide);
     currentSlide = response.index;
     onSlideChange(currentSlide);
     update();
