@@ -18,8 +18,8 @@ const svg = d3
 const tooltip = d3.select("#tooltip");
 //const stateName = document.querySelector("#state-name");
 
-const geoURL =
-  "https://raw.githubusercontent.com/PublicaMundi/MappingAPI/master/data/geojson/us-states.json";
+const geoURL = "https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json";
+  //"https://raw.githubusercontent.com/PublicaMundi/MappingAPI/master/data/geojson/us-states.json";
 const dataURL = "combined_data.csv";
 
 //var plotName;
@@ -174,7 +174,9 @@ Promise.all([d3.json(geoURL), d3.csv(dataURL)]).then(([geo, data]) => {
     .attr("value", years[0]);
   d3.select("#yearLabel").text(years[0]);
 
-  const mainlandStates = geo.features.filter((feature) => {
+  const statesGeo = topojson.feature(geo, geo.objects.states);
+
+  const mainlandStates = statesGeo.features.filter((feature) => {
     const name = feature.properties.name || feature.properties.NAME;
     return name !== "Alaska" && name !== "Puerto Rico" && name !== "Hawaii";
   });
@@ -182,14 +184,14 @@ Promise.all([d3.json(geoURL), d3.csv(dataURL)]).then(([geo, data]) => {
     type: "FeatureCollection",
     features: mainlandStates,
   };
-  const projection = d3.geoIdentity().fitSize([WIDTH, HEIGHT], mainlandGeo);
+  const projection = d3.geoAlbersUsa().fitSize([WIDTH, HEIGHT], mainlandGeo);
   const path = d3.geoPath().projection(projection);
 
   //makeLegend(color);
 
   const g = svg
-    .append("g")
-    .attr("transform", `scale(1, -1) translate(0, -${HEIGHT})`);
+    .append("g");
+    //.attr("transform", `scale(1, -1) translate(0, -${HEIGHT})`);
 
   let legendHover;
   const states = g
@@ -445,7 +447,7 @@ Promise.all([d3.json(geoURL), d3.csv(dataURL)]).then(([geo, data]) => {
     });
   }
 
-  const flipTransform = `scale(1, -1) translate(0, -${HEIGHT})`;
+  //const flipTransform = `scale(1, -1) translate(0, -${HEIGHT})`;
 
   // Zoom to state function
   function zoomInState(selectedState, clickedElement) {
@@ -483,7 +485,8 @@ Promise.all([d3.json(geoURL), d3.csv(dataURL)]).then(([geo, data]) => {
         .duration(1000)
         .attr(
           "transform",
-          `${flipTransform} translate(${translate[0]},${translate[1]}) scale(${scale})`
+          //`${flipTransform} translate(${translate[0]},${translate[1]}) scale(${scale})`
+          `translate(${translate[0]},${translate[1]}) scale(${scale})`
         );
       currentZoomState = stateName;
       isSelected = true;
@@ -497,7 +500,7 @@ Promise.all([d3.json(geoURL), d3.csv(dataURL)]).then(([geo, data]) => {
 
       g.transition()
         .duration(1000)
-        .attr("transform", `${flipTransform} translate(0,0) scale(1)`);
+        .attr("transform", /*`${flipTransform} translate(0,0) scale(1)`*/` translate(0,0) scale(1)`);
       currentZoomState = null;
       isSelected = false;
       zoomGraph = false;
