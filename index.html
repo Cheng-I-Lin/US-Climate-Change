@@ -8,16 +8,140 @@
     <link rel="stylesheet" href="plot.css" />
   </head>
   <body>
+    <div id="introContainer">
+        <div class="textContainer" id="intro">
+            <h1 id="mainTitle">Multi-Model Climate Visualization:<br> America's Climate Crisis</h1>
+            <h2>A Data Science Study</h2>
+            <div id="scrollIndicator">Scroll to begin ↓</div>
+        </div>
+    </div>
+
+    <!--
+    <section id="introPage" class="introSection fullPageIntro">
+        <h1 class="mainTitle">Multi-Model Climate Visualization</h1>
+      <p class="authors">Authors: Alan Lin, Dillon Bowes, Vishal Rana Paidi</p>
+  
+        <div class="introContent">
+          <p>
+            This interactive data story explores how climate change may impact
+            different regions of the United States throughout the 21st century.
+            Using simulation-based projections from the
+            <strong>CMIP6 (Coupled Model Intercomparison Project Phase 6)</strong>,
+            we visualize how temperature, precipitation, snowfall, and soil moisture
+            may shift under varying greenhouse gas emission scenarios.
+          </p>
+      
+          <p>
+            These results reflect <strong>predicted future conditions</strong> based on
+            climate models — not historical observations — run under both moderate
+            <strong>SSP2-4.5</strong> and extreme high-emissions
+            <strong>SSP5-8.5</strong> pathways.
+          </p>
+      
+          <p>
+            Scroll to explore how projected warming is expected to amplify regional
+            climate differences, such as heavier rainfall in northern states and
+            worsening drought risks in the south.
+          </p>
+        </div>
+      </section>-->
+
+    <div class="texts" style="text-align: center; margin-bottom: 50vh;">
+        <h1>Have you ever wondered what would happen if our greenhouse gases emissions <span class="specialText">skyrocketed</span>?</h1>
+    </div>
+    <div id="introContainer2">
+        <div id="introText">
+            <div class="texts">
+                <h1 class="specialText">Pollutions</h1>
+                <ul>
+                    <li>Fossil Fuels</li>
+                    <li>Energy Productions</li>
+                    <li>transportations</li>
+                </ul>
+            </div>
+            <div class="texts">
+                <h1 class="specialText">Wastes</h1>
+                <ul>
+                    <li>Harmful Chemicals</li>
+                    <li>Agriculture & Livestocks</li>
+                    <li>Decomposition of organic matter</li>
+                </ul>
+            </div>
+            <div class="texts" style="margin-bottom: 10vh;">
+                <h1 class="specialText">Lack of protective policies</h1>
+                <ul>
+                    <li>Deforestation</li>
+                    <li>Loose climate regulations</li>
+                    <li>Lack of awareness</li>
+                </ul>
+            </div>
+        </div>
+        <div id="introStats">
+            <svg id="introGraph">
+                <path id="trend-path"
+                    d="M50 450 L 450 50"
+                    fill="none"
+                    stroke="var(--text-color)"
+                    stroke-width="10"
+                    stroke-linecap="round"
+                />
+  
+                <polygon id="arrow-head"
+                  points="-10,-5 0,0 -10,5"
+                  fill="var(--text-color)"
+                  stroke="var(--text-color)"
+                  stroke-width="10"
+                />
+            </svg>
+        </div>
+    </div>
+    <div class="texts" style="text-align: center; margin-bottom: 50vh;">
+        <h1>Due to all these issues, our environment has been <span class="specialText">deteriorating</span></h1>
+        <h3>Therefore, in order to <span class="specialText">fix</span> the problem, we need to first 
+            <span class="specialText">understand</span> the problem</h3>
+            
+            <section style="padding: 0 15em; text-align: left; color: rgb(185, 185, 185);">
+                <p>
+                    This interactive data story explores how climate change may impact
+                    different regions of the United States throughout the 21st century.
+                    Using simulation-based projections from the
+                    <strong>CMIP6 (Coupled Model Intercomparison Project Phase 6)</strong>,
+                    we visualize how temperature, precipitation, snowfall, and soil moisture
+                    may shift under varying greenhouse gas emission scenarios.
+                </p>
+
+                <p>
+                    These results reflect <strong>predicted future conditions</strong> based on
+                    climate models — not historical observations — run under both moderate
+                    <strong>SSP2-4.5</strong> and extreme high-emissions
+                    <strong>SSP5-8.5</strong> pathways.
+                </p>
+
+                <p>
+                    Scroll to explore how projected warming is expected to amplify regional
+                    climate differences, such as heavier rainfall in northern states and
+                    worsening drought risks in the south.
+                </p>
+            </section>
+    </div>
+
     <div id="main-container">
       <div id="mainText">
         <div class="textContainer" id="title">
           <!-- U.S. Average Annual Near Surface Temperature (TAS) by State -->
-          <h1>Climate Change & Environmental Consequences</h1>
+          <h1 class="specialText">Data Analysis and Visualization</h1>
+          <!--
           <p>
             <strong>Keep scrolling.</strong>
-            See how the predicted climate change scenarios of varying emission levels could 
+            See how the simulated climate change prediction scenarios of varying emission levels could 
             lead to detrimental environmental impacts in the United States 
             under different model forecasts.
+          </p>-->
+          <p>
+            Of course, it is common knowledge that when greenhouse gases emissions proliferates, so does
+            temperature, thus causing global warming. However, what other environmental aspects are 
+            impacted alongside temperatures?
+
           </p>
           <small>
             <a href="https://www.dkrz.de/en/communication/climate-simulations/cmip6-en">CMIP6 Dataset</a>: 
@@ -35,8 +159,10 @@
                 <li>Moderate climate protection measures</li>
                 <li>Radiative forcing of <em>4.5 W/m<sup>2</sup></em> by 2100</li>
             </ul>
-            The map on the right shows the predicted mean near-surface temperature (TAS), representing how temperatures in the 
-            United States would look like if there's moderate emission levels.
+            The map on the right shows the predicted mean near-surface temperature <span class="sideNote">(TAS)</span>, representing how temperatures in the 
+            United States would look like if there's moderate emission levels.<br><br>
+            This serves as our <span class="specialText">baseline</span>: a reasonable outcome with our current consumption and development rates.
+            <br><br>
             <em class="instructions"><span class="instructionStar">*</span>Hover over each state to see the exact temperature values</em>
           </p>
           <small>TAS data averaged by all models and years</small>
@@ -52,8 +178,10 @@
                 <li>Severe global warming</li>
                 <li>Radiative forcing of <em>8.5 W/m<sup>2</sup></em> by 2100</li>
             </ul>
-            The map on the right shows the predicted mean near-surface temperature (TAS), representing how temperatures in the 
-            United States would look like if there's high emission levels.
+            The map on the right shows the predicted mean near-surface temperature <span class="sideNote">(TAS)</span>, representing how temperatures in the 
+            United States would look like if there's high emission levels.<br><br>
+            This serves as the <span class="specialText">worst case scenario</span>: a terrible outcome that should not happen.
+            <br><br>
             <em class="instructions"><span class="instructionStar">*</span>Hover over each state to see the exact temperature values</em>
           </p>
           <small>TAS data averaged by all models and years</small>
@@ -61,7 +189,9 @@
         <div class="textContainer">
           <h2>Scenario Comparison</h2>
           <p>
-            When we compare the two scenarios (TAS of SSP585 minus TAS of SSP245) we see that 
+            We then compare the two scenarios to visualize their differences 
+            <span class="sideNote">(TAS of SSP585 minus TAS of SSP245)</span> to see how much 
+            dire the worst case scenario is compared to the baseline. We noticed that 
             <ul>
                 <li>Overall average increase of <em>1.86°C</em> (an increase of <a href="https://www.un.org/en/climatechange/science/climate-issues/degrees-matter"><em>1.5°C</em></a> results in severe climate change impacts)</li>
                 <li>States in the middle experienced higher temperature incease on average</li>
@@ -81,10 +211,21 @@
                 <li>Snowfall (mm)</li>
                 <li>Soil moisture content (mm)</li>
             </ul>
-            By doing so, we can visualize how emission levels can lead to global warming that can
-            thus perpetrate climate change related crises.
+            By comparing to extreme thresholds, we can visualize how emission levels can lead to global warming that can
+            thus perpetrate climate change related crises. <br><br>
+            <strong>Global Thresholds of Severe Changes:</strong>
+            <ul>
+                <li>Temperature <span class="specialText">→</span> 1.5 °C</li>
+                <li>Precipitation <span class="specialText">→</span> 24 ~ 48 mm</li>
+                <li>Snowfall <span class="specialText">→</span> -8 ~ -12 mm</li>
+                <li>Soil Moisture <span class="specialText">→</span> -1.5 ~ -3 mm</li>
+            </ul>
           </p>
-          <small>Comparing data of scenario differences</small>
+          <small>Sources: 
+            <a href="https://nyaspubs.onlinelibrary.wiley.com/doi/10.1111/nyas.14337">Precipitation</a>,
+            <a href="https://www.ipcc.ch/report/ar6/wg1/chapter/chapter-9/">Snowfall</a>,
+            <a href="https://hess.copernicus.org/articles/25/5749/2021/">Soil Moisture</a>
+        </small>
         </div>
 
         <!-- North more rain, a lot less snow; South less rain & snow -->
@@ -104,8 +245,18 @@
         <div class="textContainer">
             <h2>Northern States: Trendlines</h2>
             <p>
-              These trends become apparant when graphed, showing how temperature, precipitation, snow fall, and
-              soil moisture changes as the years go by.
+                These trends become apparant when graphed, showing how temperature, precipitation, snow fall, and
+                soil moisture changes as the years go by.<br><br>
+                <strong>Effects:</strong>
+                  <ul>
+                    <li>Less snowpack <span class="specialText">→</span> water supply declines</li>
+                    <li>Increased precipitation <span class="specialText">→</span> flood risk rises</li>
+                    <li>Warmer winters <span class="specialText">→</span> winter tourism decreases</li>
+                    <li>More pests <span class="specialText">→</span> forests & crops harmed</li>
+                    <li>Slight soil drying <span class="specialText">→</span> erosion becomes more severe</li>
+                  </ul>
+                <em class="instructions"><span class="instructionStar">*</span>Click to enlarge graphs: dotted lines represent extreme thresholds
+                that causes detrimental consequences if crossed</em>
             </p>
         </div>
 
@@ -125,8 +276,18 @@
         <div class="textContainer">
             <h2>Southern States: Trendlines</h2>
             <p>
-              These trends become apparant when graphed, showing how temperature, precipitation, snow fall, and
-              soil moisture changes as the years go by.
+                These trends become apparant when graphed, showing how temperature, precipitation, snow fall, and
+                soil moisture changes as the years go by.<br><br>
+                <strong>Effects:</strong>
+                <ul>
+                  <li>Hotter & drier climate <span class="specialText">→</span> droughts become frequent</li>
+                  <li>Reduced soil moisture <span class="specialText">→</span> agriculture productivity drops</li>
+                  <li>Higher evaporation <span class="specialText">→</span> rivers & aquifers shrink</li>
+                  <li>Dry vegetation <span class="specialText"><span class="specialText">→</span></span> wildfire danger increases</li>
+                  <li>Extreme heat <span class="specialText">→</span> health risks & energy use rise</li>
+                </ul>
+                <em class="instructions"><span class="instructionStar">*</span>Click to enlarge graphs: dotted lines represent extreme thresholds
+                that causes detrimental consequences if crossed</em>
             </p>
         </div>
 
@@ -147,7 +308,17 @@
             <h2>Northeastern States: Trendlines</h2>
             <p>
               These trends become apparant when graphed, showing how temperature, precipitation, snow fall, and
-              soil moisture changes as the years go by.
+              soil moisture changes as the years go by.<br><br>
+              <strong>Effects:</strong>
+              <ul>
+                <li>Stronger storms <span class="specialText">→</span> coastal & inland flooding increases</li>
+                <li>Less snowfall <span class="specialText">→</span> winter economies weaken</li>
+                <li>Heavy rainfall <span class="specialText">→</span> infrastructure fails more often</li>
+                <li>Milder winters <span class="specialText">→</span> disease-carrying insects spread</li>
+                <li>Wetter soils <span class="specialText">→</span> erosion & runoff pollution worsen</li>
+              </ul>
+              <em class="instructions"><span class="instructionStar">*</span>Click to enlarge graphs: dotted lines represent extreme thresholds
+              that causes detrimental consequences if crossed</em>
             </p>
         </div>
 
@@ -170,6 +341,12 @@
                 <li>Snowfall decreases drastically</li>
                 <li>Soil moisture drops slightly or remains relatively similar</li>
             </ul>
+            <strong>Impacts & Evidence:</strong>
+            <ul>
+              <li>Heavy rains <span class="specialText">→</span> flash flooding and deadly floods (e.g. July 2025 floods in Ruidoso)</li>
+              <li>Floods after wildfires <span class="specialText">→</span> washed away homes & roads due to burn-scar vulnerability </li>
+              <li>Increased flood damage costs <span class="specialText">→</span> rising number of costly weather disasters tied to drought/flood cycles in Southwest</li>
+            </ul>
             <em class="instructions"><span class="instructionStar">*</span>Click the statistics below to show detailed graphs</em>
           </p>
         </div>
@@ -184,6 +361,14 @@
                   <li>Snowfall remains relatively unchanged, oscillating around the mean of <em>-0.2</em> mm</li>
                   <li>Soil moisture remains relatively unchanged, oscillating around the mean of <em>0.2</em> mm</li>
               </ul>
+              <strong>Documented Impacts (South Carolina):</strong>
+              <ul>
+                <li>Rising sea level + land subsidence <span class="specialText">→</span> coastal flooding and shoreline erosion</li>
+                <li>Hundreds of major disasters (1980–2024) <span class="specialText">→</span> billions in damage; frequent hurricanes & storms</li>
+                <li>Coastal cities (e.g. Charleston) <span class="specialText">→</span> many buildings now at high risk of flood or storm-surge damage</li>
+                <li>Wetland & salt-marsh loss <span class="specialText">→</span> harmful effects on fisheries, water quality, and natural flood protection</li>
+                <li>Historic “100-year” floods & heavy rainfall events <span class="specialText">→</span> becoming more frequent and intense</li>
+              </ul>
               <em class="instructions"><span class="instructionStar">*</span>Click the statistics below to show detailed graphs</em>
             </p>
         </div>
@@ -197,6 +382,12 @@
                   <li>Snowfall remains relatively unchanged, oscillating around the mean of <em>-0.11</em> mm</li>
                   <li>Soil moisture remains relatively unchanged, oscillating around the mean of <em>-0.09</em> mm</li>
               </ul>
+              <strong>Impacts & Evidence:</strong>
+              <ul>
+                <li>Frequent disasters <span class="specialText">→</span> Florida has had 94 confirmed climate/wether disaster events (1980–2024) with > US$1 billion each</li>
+                <li>Storms, hurricanes & floods <span class="specialText">→</span> severe storms, tropical cyclones notably contributing to disasters in the state</li>
+                <li>Heat & environmental stress <span class="specialText">→</span> combination of heat, drought, fire, flooding, and hurricanes threatens agriculture, tourism and human health in Florida</li>
+              </ul>
               <em class="instructions"><span class="instructionStar">*</span>Click the statistics below to show detailed graphs</em>
             </p>
         </div>
@@ -208,6 +399,13 @@
               <ul>
                   <li>Precipitation and soil moisture oscillitate between positive (increase) and negative (decrease) values</li>
                   <li>Snowfall slightly decreases but with oscillating behavior as well</li>
+              </ul>
+              <strong>Impacts & Evidence:</strong>
+              <ul>
+                <li>Sea level rise & coastal flooding risk <span class="specialText">→</span> coastal areas vulnerable to inundation and storm surge under warming seas</li>
+                <li>More severe floods & drought swings <span class="specialText">→</span> warmer climate linked to increased flooding and drought threats across the state</li>
+                <li>Agriculture & water supply stress <span class="specialText">→</span> Rivers, reservoirs, and water supply (e.g. for major metro areas) face decline due to changing rainfall + evaporation patterns</li>
+                <li>Health & heat-stress risks <span class="specialText">→</span> rising temperatures raise risks of heat illnesses and strain energy/water systems</li>
               </ul>
               <em class="instructions"><span class="instructionStar">*</span>Click the statistics below to show detailed graphs</em>
             </p>
@@ -224,6 +422,14 @@
                 <li>Snowfall slightly decreases but with oscillating behavior as well</li>
                 <li>Soil moisture decreases, oscillating around the mean of <em>-4.7</em> mm</li>
             </ul>
+            <strong>Documented Impacts (Rhode Island):</strong>
+            <ul>
+              <li>Sea level rise <span class="specialText">→</span> coastal flooding and more frequent high-tide (“nuisance”) floods</li>
+              <li>Rising sea & land subsidence <span class="specialText">→</span> shoreline erosion and loss of beaches & wetlands</li>
+              <li>Heavier precipitation & extreme rainfall events <span class="specialText">→</span> urban and inland flooding; overwhelmed storm-drain and sewer systems</li>
+              <li>Warmer average temperatures & heat waves <span class="specialText">→</span> increased heat-stress risks, more days over 90 °F</li>
+              <li>Ocean warming & acidification <span class="specialText">→</span> threats to fisheries and shellfish habitats (e.g. salt-marsh, oyster beds), declining marine biodiversity</li>
+            </ul>
             <em class="instructions"><span class="instructionStar">*</span>Click the statistics below to show detailed graphs</em>
           </p>
         </div>
@@ -236,6 +442,12 @@
               <ul>
                   <li>Precipitation remains relatively unchanged, oscillating around the mean of <em>-15.07</em> mm</li>
                   <li>Snowfall experienced a slightly declining yet oscillating trend</li>
+              </ul>
+              <strong>Impacts & Evidence:</strong>
+              <ul>
+                <li>Warming & heavier rainstorms <span class="specialText">→</span> more frequent heavy rainfall events, increasing flood risk and coastal inundation</li>
+                <li>Sea-level rise <span class="specialText">→</span> low-lying lands, wetlands and aquifers threatened by rising sea levels and saltwater intrusion</li>
+                <li>Damage to ecosystems & agriculture <span class="specialText">→</span> shifting climate threatens wetlands, farms, and water-quality in inland and coastal zones</li>
               </ul>
               <em class="instructions"><span class="instructionStar">*</span>Click the statistics below to show detailed graphs</em>
             </p>
@@ -265,7 +477,30 @@
                     </ul>
                   </li>
               </ul>
+              <strong>Impacts & Evidence:</strong>
+              <ul>
+                <li>Increased heavy rainfall & floods <span class="specialText">→</span> recent storms (e.g. early-April 2025) intensified by climate change caused deadly floods in Tennessee and neighboring states</li>
+                <li>More frequent disasters <span class="specialText">→</span> state recently impacted by multiple billion-dollar disasters tied to extreme weather, drought, rainfall variability</li>
+                <li>Water supply stress despite rainfall rise <span class="specialText">→</span> higher evaporation offsets rainfall gains, reducing streamflow and groundwater recharge</li>
+                <li>Soil drying & ecosystem stress <span class="specialText">→</span> altered soil moisture and shifting rainfall patterns affecting agriculture and natural ecosystems</li>
+              </ul>
               <em class="instructions"><span class="instructionStar">*</span>Click the statistics below to show detailed graphs</em>
+            </p>
+        </div>
+
+        <div class="textContainer">
+            <h2>Key Takeaways</h2>
+            <p>
+                <ul>
+                    <li>All states will pass the <em>1.5°C</em> threshold by 2076 if SSP585 persists</li>
+                    <li>While Northern and Northeastern states passed the precipitation threshold of +24 mm/yr, 
+                        Southern states did the opposite and went beyond -24 mm/yr 
+                    </li>
+                    <li>All states passed through the snowfall threshold of -8 mm/yr, with the sole exceptions of 
+                        South Carolina, Florida, and Georgia
+                    </li>
+                    <li>All three regions did not pass the soil moisture threshold of -1.5 mm/yr</li>
+                </ul>
             </p>
         </div>
 
@@ -290,7 +525,7 @@
         <div id="tooltip"></div>
       </div>
     </div>
-
+    <br>
     <div class="textContainer" id="filterSection">
       <div class="textContainer" id="showFilter">
         <strong>Show Filters</strong>
@@ -321,6 +556,8 @@
       </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/gsap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/ScrollTrigger.min.js"></script>
     <script src="plot.js" type="module"></script>
   </body>
 </html>

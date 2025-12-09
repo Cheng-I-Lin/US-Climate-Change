@@ -10,16 +10,11 @@ const svg = d3
   .attr("viewBox", `0 0 ${WIDTH} ${HEIGHT}`)
   .style("overflow", "hidden");
 
-/*const svg_state = d3
-  .select("#state-chart")
-  .style("overflow", "visible")
-  .style("display", "none");*/
-
 const tooltip = d3.select("#tooltip");
 //const stateName = document.querySelector("#state-name");
 
 const geoURL = "https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json";
-  //"https://raw.githubusercontent.com/PublicaMundi/MappingAPI/master/data/geojson/us-states.json";
+//"https://raw.githubusercontent.com/PublicaMundi/MappingAPI/master/data/geojson/us-states.json";
 const dataURL = "combined_data.csv";
 
 //var plotName;
@@ -189,9 +184,8 @@ Promise.all([d3.json(geoURL), d3.csv(dataURL)]).then(([geo, data]) => {
 
   //makeLegend(color);
 
-  const g = svg
-    .append("g");
-    //.attr("transform", `scale(1, -1) translate(0, -${HEIGHT})`);
+  const g = svg.append("g");
+  //.attr("transform", `scale(1, -1) translate(0, -${HEIGHT})`);
 
   let legendHover;
   const states = g
@@ -199,7 +193,7 @@ Promise.all([d3.json(geoURL), d3.csv(dataURL)]).then(([geo, data]) => {
     .data(mainlandStates)
     .join("path")
     .attr("d", path)
-    .attr("stroke", "#333")
+    .attr("stroke", "black")
     .attr("stroke-width", 0.5)
     .attr("class", "states")
     .attr("id", (d) => d.properties.name.replace(/\s/g, ""))
@@ -337,7 +331,7 @@ Promise.all([d3.json(geoURL), d3.csv(dataURL)]).then(([geo, data]) => {
     states
       .style("fill-opacity", 0.7)
       .attr("fill", (d) => {
-        if ([0, 4].includes(currentSlide)) {
+        if ([0, 4, 19].includes(currentSlide)) {
           return "#ccc";
         }
         const name = d.properties.name;
@@ -350,19 +344,19 @@ Promise.all([d3.json(geoURL), d3.csv(dataURL)]).then(([geo, data]) => {
           if ([5, 6].includes(currentSlide)) {
             //Colors only the selected states
             return Object.keys(filteredNorthLookup).includes(name)
-              ? diffColor(lookup[name])
+              ? "rgb(245, 101, 87)"
               : "#ccc";
           } else if ([7, 8].includes(currentSlide)) {
             return Object.keys(filteredSouthLookup).includes(name)
-              ? diffColor(lookup[name])
+              ? "rgb(245, 101, 87)"
               : "#ccc";
           } else if ([9, 10].includes(currentSlide)) {
             return Object.keys(filteredNortheastLookup).includes(name)
-              ? diffColor(lookup[name])
+              ? "rgb(245, 101, 87)"
               : "#ccc";
           } else if (currentSlide >= 11 && currentSlide <= 18) {
             return Object.keys(filteredExceptionLookup).includes(name)
-              ? diffColor(lookup[name])
+              ? "rgb(245, 101, 87)"
               : "#ccc";
           } else {
             return lookup[name] ? color(lookup[name]) : "#ccc";
@@ -372,7 +366,10 @@ Promise.all([d3.json(geoURL), d3.csv(dataURL)]).then(([geo, data]) => {
       .on("mouseover", (event, d) => {
         const name = d.properties.name;
         const val = lookup[name];
-        if (currentSlide != 0 && !isSelected) {
+        if (
+          ((currentSlide != 0 && currentSlide <= 3) || currentSlide == 20) &&
+          !isSelected
+        ) {
           tooltip
             .style("display", "block")
             .style("left", event.offsetX + 5 + "px")
@@ -380,6 +377,8 @@ Promise.all([d3.json(geoURL), d3.csv(dataURL)]).then(([geo, data]) => {
             .html(
               `<b>${name}</b><br>${val ? val.toFixed(2) + " °C" : "No Data"}`
             );
+          console.log(val);
+          console.log(name);
         }
       })
       .on("mouseout", () => tooltip.style("display", "none"))
@@ -400,38 +399,6 @@ Promise.all([d3.json(geoURL), d3.csv(dataURL)]).then(([geo, data]) => {
             }
             zoomInState(d, event.currentTarget);
             selectState();
-            /*
-            if (selectedState.length == 0)
-              selectedState.push(event.currentTarget);
-            
-            if (isZoomed) {
-              if (event.currentTarget.classList.contains("selected")) {
-                event.currentTarget.classList.remove("selected");
-                isSelected = false;
-                selectState();
-                selectedState.pop();
-                .innerHTML =
-                  "Click a state to see temperature data aggregated by the chosen state";
-              }
-            } else {
-              if (!event.currentTarget.classList.contains("selected")) {
-                const name = d.properties.name;
-                plotName = name;
-                const filtered = data.filter(
-                  (d) =>
-                    d.scenario === scenario &&
-                    d.model === model &&
-                    d.state === name
-                );
-                event.currentTarget.classList.add("selected");
-                isSelected = true;
-                selectState();
-                //moveStateToLeft(selectedState[0]);
-                zoomInState(d, event.currentTarget);
-                subplot(filtered, usSeries);
-                //stateName.innerHTML = "Click " + plotName + " to deselect";
-              }
-            }*/
           }
         }
       });
@@ -481,13 +448,11 @@ Promise.all([d3.json(geoURL), d3.csv(dataURL)]).then(([geo, data]) => {
       d3.select(clickedElement).classed("faded", false).classed("zoomed", true);
 
       // Create zoom transition
-      g.transition()
-        .duration(1000)
-        .attr(
-          "transform",
-          //`${flipTransform} translate(${translate[0]},${translate[1]}) scale(${scale})`
-          `translate(${translate[0]},${translate[1]}) scale(${scale})`
-        );
+      g.transition().duration(1000).attr(
+        "transform",
+        //`${flipTransform} translate(${translate[0]},${translate[1]}) scale(${scale})`
+        `translate(${translate[0]},${translate[1]}) scale(${scale})`
+      );
       currentZoomState = stateName;
       isSelected = true;
     }
@@ -496,11 +461,15 @@ Promise.all([d3.json(geoURL), d3.csv(dataURL)]).then(([geo, data]) => {
   // Reset zoom function
   function resetZoom() {
     if (isSelected) {
+      d3.selectAll(".state-visualization, .close-btn").remove();
       g.selectAll(".states").classed("faded", false).classed("zoomed", false);
 
       g.transition()
         .duration(1000)
-        .attr("transform", /*`${flipTransform} translate(0,0) scale(1)`*/` translate(0,0) scale(1)`);
+        .attr(
+          "transform",
+          /*`${flipTransform} translate(0,0) scale(1)`*/ ` translate(0,0) scale(1)`
+        );
       currentZoomState = null;
       isSelected = false;
       zoomGraph = false;
@@ -601,7 +570,11 @@ Promise.all([d3.json(geoURL), d3.csv(dataURL)]).then(([geo, data]) => {
       //root.style.setProperty("--bg-color", "rgb(238, 238, 238)");
       hideLegend();
     } else {
-      if (!isSelected && d3.select('#stats').style("display")==='none' && d3.select('#graphButtons').style("display")==='none') {
+      if (
+        !isSelected &&
+        d3.select("#stats").style("display") === "none" &&
+        d3.select("#graphButtons").style("display") === "none"
+      ) {
         legend
           .style("opacity", 1)
           .style("display", "block")
@@ -781,6 +754,15 @@ Promise.all([d3.json(geoURL), d3.csv(dataURL)]).then(([geo, data]) => {
             .style("opacity", 0)
             .style("display", "none");
           break;
+        case 19:
+          resetZoom();
+          hideButtons();
+          hideLegend();
+          d3.selectAll(".state-visualization, .close-btn").remove();
+          d3.select("#graphButtons")
+            .style("opacity", 0)
+            .style("display", "none");
+          break;
         default:
           diffLegend = false;
           break;
@@ -810,6 +792,22 @@ Promise.all([d3.json(geoURL), d3.csv(dataURL)]).then(([geo, data]) => {
       step: "#main-container .textContainer",
     })
     .onStepEnter(onStepEnter);
+
+  window.addEventListener("scroll", () => {
+    const intro = document.getElementById("introContainer");
+    const title = document.getElementById("mainTitle");
+
+    const scrollY = window.scrollY;
+    const trigger = 50; // begin fade after slight scroll
+
+    if (scrollY > trigger) {
+      intro.classList.add("fadeOut");
+      title.classList.add("shrink");
+    } else {
+      intro.classList.remove("fadeOut");
+      title.classList.remove("shrink");
+    }
+  });
 });
 
 function selectState() {
@@ -873,7 +871,7 @@ function makeLegend(colorScale) {
       .attr("height", boxH)
       .attr("fill", color)
       .style("fill-opacity", 0.7)
-      .attr("stroke", "#333")
+      .attr("stroke", "black")
       .style("stroke-width", 0.5)
       .attr("class", "states")
       .on("mouseenter", (event) => {
@@ -904,6 +902,7 @@ function makeLegend(colorScale) {
       .attr("y", boxH + 15) // Position text below the box
       .style("font-size", "10px") // Slightly smaller for horizontal layout
       .style("text-anchor", "middle") // Center the text
+      .style("fill", "white")
       .text(label);
   });
 
@@ -914,246 +913,9 @@ function makeLegend(colorScale) {
     .style("font-weight", "bold")
     .style("font-size", "11px")
     .style("text-anchor", "middle")
+    .style("fill", "white")
     .text("Temperature (°C)");
 }
-
-/*function subplot(stateData, usSeries) {
-  svg_state.selectAll("*").remove();
-
-  const margin = { top: 70, right: 40, bottom: 60, left: 70 },
-    innerWidth = width - margin.left - margin.right,
-    innerHeight = height - margin.top - margin.bottom;
-
-  const g = svg_state
-    .append("g")
-    .attr("transform", `translate(${margin.left},${margin.top})`);
-
-  const x = d3
-    .scaleLinear()
-    .domain(
-      d3.extent(
-        d3.merge([stateData.map((d) => d.year), usSeries.map((d) => d.year)])
-      )
-    )
-    .range([0, innerWidth])
-    .nice();
-
-  const allTemps = [
-    ...stateData.map((d) => d.tas_degree),
-    ...usSeries.map((d) => d.mean),
-  ];
-  const y = d3
-    .scaleLinear()
-    .domain([d3.min(allTemps) - 0.3, d3.max(allTemps) + 0.3])
-    .range([innerHeight, 0])
-    .nice();
-
-  g.append("g")
-    .attr("transform", `translate(0,${innerHeight})`)
-    .call(d3.axisBottom(x).tickFormat(d3.format("d")))
-    .call((g) =>
-      g
-        .append("text")
-        .attr("x", innerWidth / 2)
-        .attr("y", 45)
-        .attr("fill", "black")
-        .attr("text-anchor", "middle")
-        .attr("font-size", 14)
-        .text("Year")
-    );
-
-  g.append("g")
-    .call(d3.axisLeft(y))
-    .call((g) =>
-      g
-        .append("text")
-        .attr("x", -innerHeight / 2)
-        .attr("y", -50)
-        .attr("transform", "rotate(-90)")
-        .attr("fill", "black")
-        .attr("text-anchor", "middle")
-        .attr("font-size", 14)
-        .text("Temperature (°C)")
-    );
-
-  g.append("g")
-    .call(d3.axisLeft(y).tickSize(-innerWidth).tickFormat(""))
-    .attr("stroke-opacity", 0.08);
-
-  const stateLine = d3
-    .line()
-    .x((d) => x(d.year))
-    .y((d) => y(d.tas_degree))
-    .curve(d3.curveMonotoneX);
-
-  const usLine = d3
-    .line()
-    .x((d) => x(d.year))
-    .y((d) => y(d.mean))
-    .curve(d3.curveMonotoneX);
-
-  g.append("path")
-    .datum(usSeries)
-    .attr("fill", "none")
-    .attr("stroke", "#444")
-    .attr("stroke-width", 2)
-    .attr("stroke-dasharray", "6 4")
-    .attr("d", usLine);
-
-  g.append("path")
-    .datum(stateData)
-    .attr("fill", "none")
-    .attr("stroke", "#007acc")
-    .attr("stroke-width", 2.5)
-    .attr("d", stateLine);
-
-  // --- Year line (vertical dotted line) ---
-  // --- Year line and label ---
-  const yearLine = g
-    .append("line")
-    .attr("class", "year-line")
-    .attr("stroke", "black")
-    .attr("stroke-width", 1.5)
-    .attr("stroke-dasharray", "4 4")
-    .attr("y1", 0)
-    .attr("y2", innerHeight)
-    .attr("opacity", 0.8);
-
-  // const yearLabelText = g.append("text")
-  // .attr("class", "year-label")
-  // .attr("y", -10)
-  // .attr("text-anchor", "middle")
-  // .attr("font-size", 12)
-  // .attr("fill", "#990000");
-
-  function updateYearLine(year) {
-    const xPos = x(year);
-    const yPos = innerHeight * 0.25; // 25% down from top of plot area (relative positioning)
-
-    yearLine.attr("x1", xPos).attr("x2", xPos);
-
-    //     yearLabelText
-    //       .attr("x", xPos + 20)  // slight horizontal offset so text doesn’t overlap the line
-    //       .attr("y", yPos - 55)      // vertical placement stays relative to chart height
-    //       .text(year);
-    //   }
-    d3.select(".legend-year").text("Year: " + year);
-  }
-
-  const currentYear = +d3.select("#yearSlider").node().value;
-  updateYearLine(currentYear);
-  updateYearLineGlobal = updateYearLine;
-
-  svg_state.property("updateYearLine", updateYearLine);
-
-  const trendState = linearTrend(stateData, "year", "tas_degree");
-  const trendUS = linearTrend(usSeries, "year", "mean");
-  const slopeStateDecade = trendState.slope * 10;
-  const slopeUSDecade = trendUS.slope * 10;
-
-  const compare =
-    slopeStateDecade > slopeUSDecade
-      ? "Rising faster than the U.S. average"
-      : "Rising slower than the U.S. average";
-
-  g.append("text")
-    .attr("x", innerWidth / 2)
-    .attr("y", -40)
-    .attr("text-anchor", "middle")
-    .attr("font-size", 16)
-    .attr("font-weight", "bold")
-    .text(
-      "Average Annual Near Surface Temperature of " +
-        plotName +
-        " (2015 ~ 2100)"
-    );
-
-  g.append("text")
-    .attr("x", innerWidth / 2)
-    .attr("y", -18)
-    .attr("text-anchor", "middle")
-    .attr("font-size", 13)
-    .attr("fill", "#555")
-    .text(
-      `${stateData[0].state} warming at ${slopeStateDecade.toFixed(
-        2
-      )}°C per decade under ${
-        stateData[0].model
-      } (2015–2100). ${compare} (${slopeUSDecade.toFixed(2)}°C).`
-    );
-
-  const legend = g.append("g").attr("transform", `translate(10, 10)`);
-
-  legend
-    .append("rect")
-    .attr("x", -5)
-    .attr("y", -5)
-    .attr("width", 140)
-    .attr("height", 70)
-    .attr("fill", "white")
-    .attr("stroke", "#ccc")
-    .attr("opacity", 0.8);
-
-  legend
-    .append("line")
-    .attr("x1", 0)
-    .attr("x2", 24)
-    .attr("y1", 8)
-    .attr("y2", 8)
-    .attr("stroke", "#007acc")
-    .attr("stroke-width", 2.5);
-  legend
-    .append("text")
-    .attr("x", 32)
-    .attr("y", 12)
-    .attr("font-size", 12)
-    .text("State");
-
-  legend
-    .append("line")
-    .attr("x1", 0)
-    .attr("x2", 24)
-    .attr("y1", 28)
-    .attr("y2", 28)
-    .attr("stroke", "#444")
-    .attr("stroke-width", 2)
-    .attr("stroke-dasharray", "6 4");
-  legend
-    .append("text")
-    .attr("x", 32)
-    .attr("y", 32)
-    .attr("font-size", 12)
-    .text("U.S. mean");
-  // year label (dynamic text)
-  legend
-    .append("line")
-    .attr("x1", 0)
-    .attr("x2", 24)
-    .attr("y1", 48)
-    .attr("y2", 48)
-    .attr("stroke", "#a30000") // dark red, consistent with year line
-    .attr("stroke-width", 2)
-    .attr("stroke-dasharray", "5 5");
-
-  legend
-    .append("text")
-    .attr("class", "legend-year")
-    .attr("x", 32)
-    .attr("y", 52)
-    .attr("font-size", 12)
-    .text("Year: " + d3.select("#yearSlider").node().value);
-
-  function linearTrend(data, xKey, yKey) {
-    const n = data.length;
-    const sumX = d3.sum(data, (d) => d[xKey]);
-    const sumY = d3.sum(data, (d) => d[yKey]);
-    const sumXY = d3.sum(data, (d) => d[xKey] * d[yKey]);
-    const sumXX = d3.sum(data, (d) => d[xKey] * d[xKey]);
-    const slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
-    const intercept = (sumY - slope * sumX) / n;
-    return { slope, intercept };
-  }
-}*/
 
 function createGraphButtons() {
   d3.selectAll(".graph-buttons").remove();
@@ -1206,7 +968,9 @@ function createSummaryStats(stateData) {
   dl.append("dd").html(`${means["prsn"]}<em style="font-size: 0.5em;">mm</em>`);
 
   dl.append("dt").text("Mean Soil Moisture");
-  dl.append("dd").html(`${means["mrsos"]}<em style="font-size: 0.5em;">mm</em>`);
+  dl.append("dd").html(
+    `${means["mrsos"]}<em style="font-size: 0.5em;">mm</em>`
+  );
 }
 
 function createStateVisualizations(stateData, stateName, button = true) {
@@ -1310,6 +1074,13 @@ function createSingleGraph(
     "Soil Moisture": "(mm)",
   };
 
+  const thresholds = {
+    Temperature: 1.5,
+    Precipitation: 24,
+    Snowfall: -8,
+    "Soil Moisture": -1.5,
+  };
+
   let className = zoomGraph ? "zoom-graph" : "line-graph";
   const graphGroup = container
     .append("g")
@@ -1340,12 +1111,22 @@ function createSingleGraph(
           stateName,
           margin
         );
+        d3.selectAll(".threshold-label")
+          .nodes()
+          .forEach((t) => {
+            d3.select(t).style("opacity", 1);
+          });
       } else {
         d3.select(".zoom-graph").remove();
         allGraphs.forEach((g) => {
           d3.select(g).style("visibility", "visible");
         });
         zoomGraph = false;
+        d3.selectAll(".threshold-label")
+          .nodes()
+          .forEach((t) => {
+            d3.select(t).style("opacity", 0);
+          });
       }
     });
 
@@ -1361,7 +1142,7 @@ function createSingleGraph(
     .append("rect")
     .attr("width", width)
     .attr("height", height)
-    .attr("fill", "rgba(255,255,255,0.9)")
+    .attr("fill", "rgba(25, 25, 25, 0.9)")
     .attr("stroke", "#ddd");
 
   // Add gridlines to TAS graph
@@ -1374,23 +1155,58 @@ function createSingleGraph(
     .y((d) => yScale(d[dataKey]))
     .curve(d3.curveMonotoneX);
 
+  function isInViewRange(thresholdValue) {
+    const yPos = yScale(thresholdValue);
+    // Check if it's within the visible SVG area
+    return yPos >= margin.top && yPos <= height - margin.bottom;
+  }
+
+  // Add the threshold line
+  if (isInViewRange(thresholds[label])) {
+    const thresholdLine = graphGroup
+      .append("line")
+      .attr("id", "threshold-line")
+      .attr("x1", margin.left) // Starting x (left margin)
+      .attr("x2", width - margin.right) // Ending x (right margin)
+      .attr("y1", yScale(thresholds[label]))
+      .attr("y2", yScale(thresholds[label]))
+      .attr("stroke", "white") // Red color for danger
+      .attr("stroke-width", 2)
+      .attr("stroke-dasharray", "5,5") // Creates dotted line
+      .attr("opacity", 0.7);
+
+    // Add label for the threshold
+    const thresholdLabel = graphGroup
+      .append("text")
+      .attr("class", "threshold-label")
+      .attr("x", width - 100) // Position on right side
+      .attr("y", yScale(thresholds[label]) - 10) // Above the line
+      .attr("text-anchor", "end")
+      .attr("fill", "white")
+      .attr("font-size", "1rem")
+      .attr("font-weight", "bold")
+      .text(`Threshold: +${thresholds[label]}${units[label]}`);
+  }
+
   graphGroup
     .append("path")
     .datum(data)
     .attr("d", line)
     .attr("fill", "none")
-    .attr("stroke", "#2c5aa0")
+    .attr("stroke", "rgb(245, 101, 87)")
     .attr("stroke-width", 2);
 
   // Axes
   graphGroup
     .append("g")
     .attr("transform", `translate(0, ${height - margin.bottom})`)
+    .attr("color", "white")
     .call(d3.axisBottom(xScale).tickFormat(d3.format("d")));
 
   graphGroup
     .append("g")
     .attr("transform", `translate(${margin.left}, 0)`)
+    .attr("color", "white")
     .call(d3.axisLeft(yScale));
 
   // Labels
@@ -1400,6 +1216,7 @@ function createSingleGraph(
     .attr("y", 20)
     .attr("text-anchor", "middle")
     .style("font-weight", "bold")
+    .style("fill", "white")
     .text(`Annual ${label} of ${stateName}`);
 
   graphGroup
@@ -1408,6 +1225,7 @@ function createSingleGraph(
     .attr("y", height - 10)
     .attr("text-anchor", "middle")
     .style("font-size", "12px")
+    .style("fill", "white")
     .text("Years");
 
   graphGroup
@@ -1418,7 +1236,22 @@ function createSingleGraph(
     .attr("dy", "1em") // Adjust vertical alignment
     .style("text-anchor", "middle")
     .style("font-size", "12px")
+    .style("fill", "white")
     .text(`${label} ${units[label]}`);
+
+  if (isInViewRange(thresholds[label])) {
+    // Add label for the threshold
+    const thresholdLabel = graphGroup
+      .append("text")
+      .attr("class", "threshold-label")
+      .attr("x", width - 100) // Position on right side
+      .attr("y", yScale(thresholds[label]) - 10) // Above the line
+      .attr("text-anchor", "end")
+      .attr("fill", "white")
+      .attr("font-size", "1rem")
+      .attr("font-weight", "bold")
+      .text(`Threshold: +${thresholds[label]}${units[label]}`);
+  }
 
   // Add brush to the first graph only
   if (addBrush && !zoomGraph) {
@@ -1561,7 +1394,7 @@ function addCloseButton(svg) {
   closeBtn
     .append("circle")
     .attr("r", 12)
-    .attr("fill", "#ff4444")
+    .attr("fill", "rgb(245, 101, 87)")
     .attr("stroke", "#cc0000")
     .attr("stroke-width", 1);
 
@@ -1580,3 +1413,126 @@ showFilter.addEventListener("click", () => {
   filterToggles.style.display =
     filterToggles.style.display === "none" ? "block" : "none";
 });
+
+gsap.registerPlugin(ScrollTrigger);
+
+// Get elements
+const INTRO_HEIGHT = 1000;
+const svg_intro = d3
+  .select("#introGraph")
+  .attr("viewBox", `0 0 ${WIDTH} ${INTRO_HEIGHT}`)
+  .style("overflow", "hidden");
+const arrow = document.querySelector("#arrow-head");
+
+// Add text element to your SVG
+const textLabel = svg_intro
+  .append("text")
+  .attr("id", "progress-label")
+  .attr("font-weight", "bold")
+  .attr("fill", "rgb(245, 101, 87)")
+  .attr("text-anchor", "right")
+  .attr("opacity", 0)
+  .text("Greenhouse Gases");
+
+// Create an exponential curve
+function createExponentialPath() {
+  const margin = 50;
+
+  // Use a single cubic bezier with carefully chosen control points
+  // This creates one continuous smooth curve
+
+  // Start point (bottom-left)
+  const startX = margin;
+  const startY = INTRO_HEIGHT - margin;
+
+  // End point (top-right)
+  const endX = WIDTH - margin;
+  const endY = margin;
+
+  // Control points for convex upward curve
+  // Control point 1: slightly right of start, keeps curve low initially
+  const cp1x = startX + (endX - startX) * 0.8;
+  const cp1y = startY; // Keep it at bottom level
+
+  // Control point 2: near the end, pulls curve up sharply
+  const cp2x = startX + (endX - startX);
+  const cp2y = endY; // Pull to top level
+
+  // SINGLE cubic bezier curve (smooth)
+  return `M ${startX} ${startY} 
+            C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${endX} ${endY}`;
+}
+
+// Set the exponential path
+const path = document.querySelector("#trend-path");
+path.setAttribute("d", createExponentialPath());
+
+// Get total length of the path
+const length = path.getTotalLength();
+
+// Prepare the line to be invisible initially
+path.style.strokeDasharray = length;
+path.style.strokeDashoffset = length;
+
+// Hide arrow initially
+arrow.style.opacity = 0;
+
+// Animation that draws the path
+gsap.to(path, {
+  strokeDashoffset: 0,
+  ease: "none",
+  scrollTrigger: {
+    trigger: "#introText",
+    start: "top center",
+    end: "bottom bottom",
+    scrub: true,
+    markers: false, // Set to true for debugging
+  },
+  onStart: function () {
+    // Show arrow when animation starts
+    gsap.to(arrow, { opacity: 1, duration: 0.5 });
+  },
+  onUpdate: function (self) {
+    // Compute current position along path
+    const progress = 1 - path.style.strokeDashoffset / length;
+    const currentLength = progress * length;
+    const point = path.getPointAtLength(currentLength);
+    const angle = getTangentAngle(path, currentLength);
+
+    // Position arrowhead directly ON the line
+    // Using transformOrigin at the arrow tip (0,0 point)
+    gsap.set(arrow, {
+      attr: {
+        transform: `translate(${point.x}, ${point.y}) rotate(${angle})`,
+      },
+    });
+
+    // Position text to the right of the arrow with an offset
+    const textOffset = 700; // Distance from arrow
+    const textAngle = angle; // Match arrow's rotation
+
+    // Calculate position for text (perpendicular offset from path)
+    const textPoint = path.getPointAtLength(currentLength + 5); // Slightly ahead
+    gsap.set(textLabel.node(), {
+      attr: {
+        transform: `translate(${textPoint.x - textOffset * progress}, ${
+          textPoint.y + 100
+        })`,
+        opacity: progress,
+      },
+    });
+    textLabel.style("font-size", `${progress * 5}em`);
+  },
+});
+
+// Helper: gets tangent angle for arrow direction
+function getTangentAngle(path, len) {
+  // Get point slightly ahead for direction calculation
+  const epsilon = 1; // Small delta
+  const p1 = path.getPointAtLength(Math.max(0, len - epsilon));
+  const p2 = path.getPointAtLength(Math.min(length, len + epsilon));
+
+  // Calculate angle in radians, convert to degrees
+  const angleRad = Math.atan2(p2.y - p1.y, p2.x - p1.x);
+  return angleRad * (180 / Math.PI);
+}

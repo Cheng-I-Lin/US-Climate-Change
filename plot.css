@@ -1,22 +1,26 @@
 :root {
-  --slider-color: #a3cefc;
   --thumb-size: 20px;
   --thumb-offset: -7px;
-  --bg-color: rgb(238, 238, 238);
+  --bg-color: rgb(20, 20, 20) /*rgb(238, 238, 238)*/;
+  --text-color: rgb(245, 101, 87);
+  --slider-color: var(--text-color);
 }
 body {
   font-family: sans-serif;
-  --body-margin: max(1em, (100% - 140ch) / 2);
+  --body-margin: max(1em, (100% - 165ch) / 2);
   margin-inline: var(--body-margin);
   overflow-x: hidden;
   background-color: var(--bg-color);
   transition: background-color 200ms linear;
+  color: white;
+  font-family: "Times New Roman", serif;
 }
 #tooltip {
   position: fixed;
-  background: white;
-  border: 1px solid #ccc;
-  padding: 6px;
+  background: black;
+  border-radius: 0.5em;
+  box-shadow: 0 0 5px rgba(255, 255, 255, 0.4);
+  padding: 1em;
   display: none;
   pointer-events: none;
   font-size: 12px;
@@ -37,7 +41,7 @@ dl {
 }
 select {
   /* Basic styling for the select box */
-  background-color: #f0f0f0;
+  background-color: #ccc;
   border: 1px solid black;
   padding: 0.5em;
   border-radius: 4px;
@@ -55,7 +59,7 @@ select {
 
 select:hover {
   outline: none; /* Remove default focus outline */
-  background-color: #bfddfd;
+  background-color: var(--text-color);
 }
 input[type="range"] {
   -webkit-appearance: none; /* For Chrome, Safari, Opera */
@@ -88,7 +92,7 @@ input[type="range"]::-webkit-slider-runnable-track {
 }
 
 input[type="range"]:hover {
-  --slider-color: #007bff;
+  --slider-color: red;
   --thumb-size: 30px;
   --thumb-offset: -10.5px;
 }
@@ -187,8 +191,12 @@ input[type="range"]:hover {
   position: relative;
   padding: 1em;
   border-radius: 2em;
-  background-color: white;
-  box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+  background-color: black;
+  box-shadow: 0 0 5px rgba(255, 255, 255, 0.4);
+
+  h2{
+    color: var(--text-color);
+  }
 }
 
 #filterSection {
@@ -196,12 +204,12 @@ input[type="range"]:hover {
 }
 
 #showFilter {
+  transition: 200ms;
   text-align: center;
-  background-color: #f0f0f0;
 }
 
 #showFilter:hover {
-  background-color: #bfddfd;
+  background-color: var(--text-color);
 }
 
 small {
@@ -212,11 +220,11 @@ small {
 a:link,
 a:visited {
   text-decoration: none;
-  color: #007bff;
+  color: var(--text-color);
 }
 
 a:hover {
-  color: blue;
+  color: red;
 }
 
 .instructions {
@@ -246,9 +254,8 @@ a:hover {
 }
 
 .line-graph:not([data-brushing="true"]):hover rect {
-  fill: rgba(235, 235, 235, 0.95);
+  fill: rgba(75, 75, 75, 0.95);
 }
-
 
 /*.dot {
   transition: all 0.3s;
@@ -287,6 +294,7 @@ a:hover {
   dl {
     display: grid;
     grid-template-columns: repeat(auto, 1fr);
+    gap: 5px;
   }
   dt {
     font-weight: bold;
@@ -303,7 +311,7 @@ a:hover {
   display: none;
   width: 100%;
   text-align: center;
-  box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 0 5px rgba(255, 255, 255, 0.2);
   transition: 200ms linear;
 }
 
@@ -321,10 +329,13 @@ button {
   border-radius: 0.25em;
   font-size: 1em;
   width: 50%;
+  background-color: black;
+  color: white;
+  border: white solid 1px;
 }
 
 button:hover {
-  background-color: #bfddfd;
+  background-color: var(--text-color);
 }
 
 @keyframes marching-ants {
@@ -335,14 +346,15 @@ button:hover {
 
 .selection {
   fill-opacity: 0.1;
-  stroke: black;
+  stroke: white;
   stroke-opacity: 0.7;
   stroke-dasharray: 5 3;
+  fill: white;
   animation: marching-ants 2s linear infinite;
 }
 
 /* Target only the overlay, not the selection */
-.line-graph .brush rect:not(.selection)  {
+.line-graph .brush rect:not(.selection) {
   fill: transparent !important;
   pointer-events: all;
 }
@@ -360,5 +372,113 @@ button:hover {
 
 /* Optional: Different styles for horizontal vs vertical */
 .grid-horizontal line {
-  stroke: #c8c8c8;
+  stroke: #a5a5a578;
+}
+
+#introContainer {
+  text-align: center;
+  display: flex;
+  align-items: center; /* Vertical center */
+  justify-content: center; /* Horizontal center */
+  box-sizing: border-box;
+  min-height: 100vh; /* Full viewport height */
+  margin: 0;
+  transition: opacity 600ms ease, transform 600ms ease;
+}
+
+#intro {
+  flex: 1;
+  background-image: url("https://cdn.dribbble.com/userupload/23298462/file/original-2b6de588ba070314868062ea7c6142c9.gif");
+  background-size: contain; /* or 'contain' depending on your needs */
+  background-position: center center;
+  background-repeat: no-repeat;
+
+  height: 75vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  h1 {
+    text-shadow: 0 0 50px rgb(255, 255, 255, 0.8);
+    font-size: 3em;
+  }
+  h2 {
+    text-shadow: 0 0 10px rgba(245, 101, 87, 0.75);
+  }
+}
+
+#introContainer2{
+  position: relative;
+  display: flex;
+  gap: 2rem;
+  margin-bottom: 50vh;
+}
+
+#introText{
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10em;
+}
+
+#introStats{
+  position: sticky;
+  top: 40%;
+  left: 0;
+  bottom: auto;
+  flex: 1;
+  height: 50vh;
+  transform: translateY(-50%);
+}
+
+.specialText{
+  color: var(--text-color);
+}
+
+
+/* Scroll indicator animation remains */
+#scrollIndicator {
+  position: absolute;
+  bottom: 7.5%;
+  margin-top: 3.5rem;
+  font-size: 1.15rem;
+  color: #afb8c2;
+  animation: bounce 1.3s infinite alternate;
+}
+
+/* Fade + shrink effect still active */
+#introContainer.fadeOut {
+  opacity: 0;
+  transform: translateY(-20px);
+}
+#mainTitle.shrink {
+  font-size: 2.2rem;
+}
+
+#mainTitle{
+  transition: font-size 600ms ease;
+}
+
+@keyframes bounce {
+  from {
+    transform: translateY(0);
+    opacity: 0.4;
+  }
+  to {
+    transform: translateY(8px);
+    opacity: 1;
+  }
+}
+
+.texts{
+  font-size: 1.25em;
+}
+
+.sideNote{
+  color: rgb(185, 185, 185);
+}
+
+.threshold-label{
+  opacity: 0;
 }
